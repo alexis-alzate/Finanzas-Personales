@@ -3,13 +3,14 @@ import ExternalSavingsList from './components/ExternalSavingsList';
 import { PiggyBank } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase/config';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
 import { collection, addDoc, deleteDoc, doc, query, where, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 import { Heart, Shield, Target, TrendingUp, TrendingDown } from 'lucide-react';
 
 // Importar componentes
 import LoginForm from './components/LoginForm';
 import Header from './components/Header';
+import Sidebar from './components/Sidebar';
 import MonthSelector from './components/MonthSelector';
 import SummaryCards from './components/SummaryCards';
 import AddExpenseForm from './components/AddExpenseForm';
@@ -33,6 +34,9 @@ function App() {
   const [savingDescription, setSavingDescription] = useState('');
   const [savingAmount, setSavingAmount] = useState('');
   const [savingDate, setSavingDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // ✅ Estado para el Sidebar (ya lo tenías bien)
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Estados para inversiones
   const [investments, setInvestments] = useState([]);
@@ -436,6 +440,23 @@ function App() {
     }
   };
 
+  // Recuperar contraseña
+  const handlePasswordReset = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error al enviar email de recuperación:', error);
+      if (error.code === 'auth/user-not-found') {
+        throw new Error('No existe una cuenta con este email');
+      } else if (error.code === 'auth/invalid-email') {
+        throw new Error('Email inválido');
+      } else {
+        throw new Error(error.message);
+      }
+    }
+  };
+
   // Agregar gasto
   const addExpense = async () => {
     if (!description || !amount || !currentUser) return;
@@ -671,6 +692,7 @@ function App() {
         setIsRegistering={setIsRegistering}
         loginError={loginError}
         handleAuth={handleAuth}
+        handlePasswordReset={handlePasswordReset}
       />
     );
   }
@@ -680,9 +702,25 @@ function App() {
       <div className="max-w-7xl mx-auto">
         <Header
           currentUser={currentUser}
-          handleLogout={handleLogout}
-          setShowCalculator={setShowCalculator}
+          setShowSidebar={setShowSidebar}
         />
+
+        {/* --- ✅ AQUÍ ESTÁ EL CAMBIO --- */}
+        {/* Renderiza el Sidebar y le pasa todas las props que necesita */}
+        <Sidebar
+          isOpen={showSidebar}
+          onClose={() => setShowSidebar(false)}
+          currentUser={currentUser}
+          handleLogout={handleLogout}
+          setShowIncomeModal={setShowIncomeModal}
+          setShowGoalModal={setShowGoalModal}
+          setShowCalculator={setShowCalculator}
+          setTempIncome={setTempIncome}
+          setTempGoal={setTempGoal}
+          monthlyIncome={monthlyIncome}
+          savingsGoal={savingsGoal}
+        />
+        {/* --- FIN DEL CAMBIO --- */}
 
         <MonthSelector
           selectedMonth={selectedMonth}
