@@ -140,7 +140,7 @@ const Sidebar = ({
 
                     <div className="mt-4 p-3 bg-white/5 rounded-xl">
                         <p className="text-white/50 text-xs text-center">
-                            Presupuesto Personal v2.0
+                            ZaetaSoft 
                         </p>
                     </div>
                 </div>
