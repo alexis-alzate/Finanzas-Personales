@@ -28,6 +28,7 @@ const Alerts = ({ categoryData, formatCurrency }) => {
                         ))}
                     </div>
                 </div>
+                +-
             </div>
         </div>
     );

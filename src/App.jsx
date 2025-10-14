@@ -1,6 +1,3 @@
-import AddSavingForm from './components/AddSavingForm';
-import ExternalSavingsList from './components/ExternalSavingsList';
-import { PiggyBank } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase/config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
@@ -13,12 +10,12 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import MonthSelector from './components/MonthSelector';
 import SummaryCards from './components/SummaryCards';
-import AddExpenseForm from './components/AddExpenseForm';
-import CategoryStatus from './components/CategoryStatus';
 import Alerts from './components/Alerts';
-import Recommendations from './components/Recommendations';
-import Charts from './components/Charts';
-import ExpenseList from './components/ExpenseList';
+import TabNavigation from './components/TabNavigation';
+import OverviewTab from './components/OverviewTab';
+import AddTab from './components/AddTab';
+import TransactionsTab from './components/TransactionsTab';
+import AnalyticsTab from './components/AnalyticsTab';
 import Modals from './components/Modals';
 
 function App() {
@@ -34,9 +31,6 @@ function App() {
   const [savingDescription, setSavingDescription] = useState('');
   const [savingAmount, setSavingAmount] = useState('');
   const [savingDate, setSavingDate] = useState(new Date().toISOString().split('T')[0]);
-
-  // ✅ Estado para el Sidebar (ya lo tenías bien)
-  const [showSidebar, setShowSidebar] = useState(false);
 
   // Estados para inversiones
   const [investments, setInvestments] = useState([]);
@@ -57,6 +51,7 @@ function App() {
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [calculatorAmount, setCalculatorAmount] = useState('');
   const [calculatorResult, setCalculatorResult] = useState(0);
   const [tempIncome, setTempIncome] = useState('975000');
@@ -70,10 +65,10 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showMonthSelector, setShowMonthSelector] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-  // Definir formatCurrency al inicio
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -93,7 +88,6 @@ function App() {
     { value: 'otros', label: '📦 Otros', color: '#C9CBCF', limit: null, icon: Target, description: 'Gastos varios' }
   ];
 
-  // Escuchar cambios de autenticación
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -109,7 +103,6 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Cargar perfil del usuario
   const loadUserProfile = async (userId) => {
     try {
       const userDoc = await getDoc(doc(db, 'userProfiles', userId));
@@ -125,7 +118,6 @@ function App() {
     }
   };
 
-  // Actualizar perfil del usuario
   const updateUserProfile = async (data) => {
     if (!currentUser) return;
     try {
@@ -135,7 +127,6 @@ function App() {
     }
   };
 
-  // Suscribirse a cambios en gastos
   const subscribeToExpenses = (userId) => {
     const q = query(collection(db, 'expenses'), where('userId', '==', userId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -148,7 +139,6 @@ function App() {
     return unsubscribe;
   };
 
-  // Suscribirse a ahorros externos
   const subscribeToExternalSavings = (userId) => {
     const q = query(collection(db, 'externalSavings'), where('userId', '==', userId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -161,7 +151,6 @@ function App() {
     return unsubscribe;
   };
 
-  // Suscribirse a inversiones
   const subscribeToInvestments = (userId) => {
     const q = query(collection(db, 'investments'), where('userId', '==', userId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -174,7 +163,6 @@ function App() {
     return unsubscribe;
   };
 
-  // Suscribirse a ingresos extra
   const subscribeToExtraIncomes = (userId) => {
     const q = query(collection(db, 'extraIncomes'), where('userId', '==', userId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -187,7 +175,6 @@ function App() {
     return unsubscribe;
   };
 
-  // Agregar ahorro externo
   const addExternalSaving = async () => {
     if (!savingDescription || !savingAmount || !currentUser) {
       alert('Por favor completa todos los campos');
@@ -202,29 +189,23 @@ function App() {
         timestamp: new Date().toISOString()
       };
       await addDoc(collection(db, 'externalSavings'), savingData);
-
       setSavingDescription('');
       setSavingAmount('');
       setSavingDate(new Date().toISOString().split('T')[0]);
-
-      console.log('Ahorro externo agregado exitosamente');
     } catch (error) {
       console.error('Error al agregar ahorro externo:', error);
       alert('Error al agregar ahorro externo: ' + error.message);
     }
   };
 
-  // Eliminar ahorro externo
   const deleteExternalSaving = async (id) => {
     try {
       await deleteDoc(doc(db, 'externalSavings', id));
     } catch (error) {
       console.error('Error eliminando ahorro externo:', error);
-      alert('Error al eliminar ahorro externo. Por favor intenta de nuevo.');
     }
   };
 
-  // Agregar inversión
   const addInvestment = async () => {
     if (!investmentDescription || !investmentAmount || !currentUser) {
       alert('Por favor completa todos los campos');
@@ -232,15 +213,11 @@ function App() {
     }
 
     const amount = parseFloat(investmentAmount);
-
-    // Calcular montos según la fuente
     let fromDisponible = 0;
     let fromEmergencia = 0;
     let fromExternalSavings = 0;
 
     const disponibleActual = remaining;
-
-    // IMPORTANTE: El ahorro emergencia incluye los ahorros externos
     const emergenciaGastos = getCategoryTotal('emergencia');
     const filteredExternalSavingsTemp = getFilteredExternalSavings();
     const totalExternalSavingsTemp = filteredExternalSavingsTemp.reduce((sum, saving) => sum + saving.amount, 0);
@@ -257,13 +234,10 @@ function App() {
         alert(`No tienes suficiente en ahorro emergencia. Disponible: ${formatCurrency(emergenciaActual)}`);
         return;
       }
-
-      // Distribuir proporcionalmente entre emergencia y externos
       const totalEmergenciaFunds = emergenciaGastos + totalExternalSavingsTemp;
       if (totalEmergenciaFunds > 0) {
         const proporcionEmergencia = emergenciaGastos / totalEmergenciaFunds;
         const proporcionExternos = totalExternalSavingsTemp / totalEmergenciaFunds;
-
         fromEmergencia = amount * proporcionEmergencia;
         fromExternalSavings = amount * proporcionExternos;
       } else {
@@ -276,13 +250,10 @@ function App() {
         return;
       }
       fromDisponible = mitad;
-
-      // La mitad de emergencia también se distribuye proporcionalmente
       const totalEmergenciaFunds = emergenciaGastos + totalExternalSavingsTemp;
       if (totalEmergenciaFunds > 0) {
         const proporcionEmergencia = emergenciaGastos / totalEmergenciaFunds;
         const proporcionExternos = totalExternalSavingsTemp / totalEmergenciaFunds;
-
         fromEmergencia = mitad * proporcionEmergencia;
         fromExternalSavings = mitad * proporcionExternos;
       } else {
@@ -302,14 +273,11 @@ function App() {
         date: investmentDate,
         timestamp: new Date().toISOString()
       };
-
       await addDoc(collection(db, 'investments'), investmentData);
-
       setInvestmentDescription('');
       setInvestmentAmount('');
       setInvestmentSource('disponible');
       setInvestmentDate(new Date().toISOString().split('T')[0]);
-
       alert('💎 Inversión registrada exitosamente');
     } catch (error) {
       console.error('Error al agregar inversión:', error);
@@ -317,17 +285,14 @@ function App() {
     }
   };
 
-  // Eliminar inversión
   const deleteInvestment = async (id) => {
     try {
       await deleteDoc(doc(db, 'investments', id));
     } catch (error) {
       console.error('Error eliminando inversión:', error);
-      alert('Error al eliminar inversión. Por favor intenta de nuevo.');
     }
   };
 
-  // Agregar ingreso extra
   const addExtraIncome = async () => {
     if (!extraIncomeDescription || !extraIncomeAmount || !currentUser) {
       alert('Por favor completa todos los campos');
@@ -342,14 +307,11 @@ function App() {
         date: extraIncomeDate,
         timestamp: new Date().toISOString()
       };
-
       await addDoc(collection(db, 'extraIncomes'), incomeData);
-
       setExtraIncomeDescription('');
       setExtraIncomeAmount('');
       setExtraIncomeDate(new Date().toISOString().split('T')[0]);
       setShowExtraIncomeModal(false);
-
       alert('💰 Ingreso extra agregado exitosamente');
     } catch (error) {
       console.error('Error al agregar ingreso extra:', error);
@@ -357,17 +319,14 @@ function App() {
     }
   };
 
-  // Eliminar ingreso extra
   const deleteExtraIncome = async (id) => {
     try {
       await deleteDoc(doc(db, 'extraIncomes', id));
     } catch (error) {
       console.error('Error eliminando ingreso extra:', error);
-      alert('Error al eliminar ingreso extra. Por favor intenta de nuevo.');
     }
   };
 
-  // Obtener ahorros externos filtrados
   const getFilteredExternalSavings = () => {
     return externalSavings.filter(saving => {
       const [year, month] = saving.date.split('-').map(Number);
@@ -375,7 +334,6 @@ function App() {
     });
   };
 
-  // Obtener inversiones filtradas
   const getFilteredInvestments = () => {
     return investments.filter(investment => {
       const [year, month] = investment.date.split('-').map(Number);
@@ -383,7 +341,6 @@ function App() {
     });
   };
 
-  // Obtener ingresos extra filtrados
   const getFilteredExtraIncomes = () => {
     return extraIncomes.filter(income => {
       const [year, month] = income.date.split('-').map(Number);
@@ -391,7 +348,6 @@ function App() {
     });
   };
 
-  // Autenticación
   const handleAuth = async () => {
     if (!email || !password) {
       setLoginError('Por favor ingresa email y contraseña');
@@ -440,7 +396,6 @@ function App() {
     }
   };
 
-  // Recuperar contraseña
   const handlePasswordReset = async (email) => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -457,7 +412,6 @@ function App() {
     }
   };
 
-  // Agregar gasto
   const addExpense = async () => {
     if (!description || !amount || !currentUser) return;
 
@@ -478,13 +432,11 @@ function App() {
     }
   };
 
-  // Eliminar gasto
   const deleteExpense = async (id) => {
     try {
       await deleteDoc(doc(db, 'expenses', id));
     } catch (error) {
       console.error('Error eliminando gasto:', error);
-      alert('Error al eliminar gasto. Por favor intenta de nuevo.');
     }
   };
 
@@ -519,37 +471,33 @@ function App() {
   const filteredInvestments = getFilteredInvestments();
   const filteredExtraIncomes = getFilteredExtraIncomes();
 
-  // Calcular total de ingresos extra del mes
   const totalExtraIncome = filteredExtraIncomes.reduce((sum, income) => sum + income.amount, 0);
-
-  // Calcular total invertido del mes
   const totalInvestedFromDisponible = filteredInvestments.reduce((sum, inv) => sum + inv.fromDisponible, 0);
   const totalInvestedFromEmergencia = filteredInvestments.reduce((sum, inv) => sum + inv.fromEmergencia, 0);
   const totalInvestedFromExternalSavings = filteredInvestments.reduce((sum, inv) => sum + (inv.fromExternalSavings || 0), 0);
 
   const totalSpent = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-  // El disponible ahora incluye ingresos extra y descuenta las inversiones tomadas del disponible
   const remaining = monthlyIncome + totalExtraIncome - totalSpent - totalInvestedFromDisponible;
-  const remainingPercentage = (remaining / (monthlyIncome + totalExtraIncome)) * 100;
+  const remainingPercentage = (monthlyIncome + totalExtraIncome) > 0 ? (remaining / (monthlyIncome + totalExtraIncome)) * 100 : 0;
 
-  // Calcular totalSavings incluyendo ahorros externos
   const filteredExternalSavings = getFilteredExternalSavings();
   const totalExternalSavings = filteredExternalSavings.reduce((sum, saving) => sum + saving.amount, 0);
 
-  // El ahorro emergencia ahora incluye los ahorros externos y descuenta las inversiones
   const emergenciaBase = getCategoryTotal('emergencia');
-
-  // Restar las inversiones proporcionalmente de los ahorros externos
   const totalEmergenciaSavings = emergenciaBase + totalExternalSavings - totalInvestedFromEmergencia - totalInvestedFromExternalSavings;
-
-  // Los ahorros externos visibles también deben descontar lo invertido desde externos
   const externalSavingsDisplay = totalExternalSavings - totalInvestedFromExternalSavings;
-
   const totalSavings = getCategoryTotal('ahorros') + totalEmergenciaSavings;
 
-  const savingsPercentage = (totalSavings / savingsGoal) * 100;
-  const spentPercentage = (totalSpent / monthlyIncome) * 100;
+  const savingsPercentage = savingsGoal > 0 ? (totalSavings / savingsGoal) * 100 : 0;
+  const spentPercentage = monthlyIncome > 0 ? (totalSpent / monthlyIncome) * 100 : 0;
+
+  // 🔥 =================== AQUÍ ESTÁ LA MAGIA =================== 🔥
+  // 1. Calculamos el total de todas tus inversiones.
+  const totalInvested = filteredInvestments.reduce((sum, investment) => sum + investment.amount, 0);
+
+  // 2. Sumamos todo: lo que te queda, lo que has ahorrado y lo que has invertido.
+  const patrimonioTotal = remaining + totalSavings + totalInvested;
+  // 🔥 ========================================================== 🔥
 
   const categoryData = categories.map(cat => {
     const spent = getCategoryTotal(cat.value);
@@ -576,68 +524,6 @@ function App() {
         });
       }
     });
-
-    const gustosSpent = getCategoryTotal('gastos-gustos');
-    const gustosPercentage = (gustosSpent / monthlyIncome) * 100;
-    if (gustosPercentage > 20) {
-      recommendations.push({
-        type: 'info',
-        icon: '💡',
-        message: `Los Gastos Gustos representan el ${gustosPercentage.toFixed(0)}% de tu ingreso. Lo ideal es mantenerlos bajo el 20%.`
-      });
-    }
-
-    const entretenimientoSpent = getCategoryTotal('entretenimiento');
-    if (entretenimientoSpent > 40000) {
-      recommendations.push({
-        type: 'tip',
-        icon: '🎯',
-        message: 'Gastas bastante en entretenimiento. Considera buscar alternativas gratuitas o más económicas.'
-      });
-    }
-
-    if (savingsPercentage < 50 && savingsPercentage > 0) {
-      recommendations.push({
-        type: 'goal',
-        icon: '💰',
-        message: `Llevas ${savingsPercentage.toFixed(0)}% de tu meta de ahorro. ¡Sigue así! Intenta reducir gastos no esenciales.`
-      });
-    }
-
-    if (savingsPercentage >= 100) {
-      recommendations.push({
-        type: 'success',
-        icon: '🎉',
-        message: '¡Excelente! Alcanzaste tu meta de ahorro. Considera aumentar tu meta para el próximo mes.'
-      });
-    }
-
-    if (spentPercentage < 70) {
-      recommendations.push({
-        type: 'success',
-        icon: '✅',
-        message: `¡Vas muy bien! Solo has gastado el ${spentPercentage.toFixed(0)}% de tu presupuesto. Mantén este ritmo.`
-      });
-    }
-
-    const transporteSpent = getCategoryTotal('transporte');
-    const transportePercentage = (transporteSpent / monthlyIncome) * 100;
-    if (transportePercentage > 15) {
-      recommendations.push({
-        type: 'tip',
-        icon: '🚴',
-        message: 'El transporte consume mucho de tu presupuesto. Considera compartir viajes o usar transporte público.'
-      });
-    }
-
-    if (filteredInvestments.length > 0) {
-      const totalInvested = filteredInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-      recommendations.push({
-        type: 'success',
-        icon: '💎',
-        message: `¡Genial! Has invertido ${formatCurrency(totalInvested)} este mes. Las inversiones son clave para tu futuro financiero.`
-      });
-    }
 
     if (recommendations.length === 0) {
       recommendations.push({
@@ -700,13 +586,6 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <Header
-          currentUser={currentUser}
-          setShowSidebar={setShowSidebar}
-        />
-
-        {/* --- ✅ AQUÍ ESTÁ EL CAMBIO --- */}
-        {/* Renderiza el Sidebar y le pasa todas las props que necesita */}
         <Sidebar
           isOpen={showSidebar}
           onClose={() => setShowSidebar(false)}
@@ -720,7 +599,11 @@ function App() {
           monthlyIncome={monthlyIncome}
           savingsGoal={savingsGoal}
         />
-        {/* --- FIN DEL CAMBIO --- */}
+
+        <Header
+          currentUser={currentUser}
+          setShowSidebar={setShowSidebar}
+        />
 
         <MonthSelector
           selectedMonth={selectedMonth}
@@ -750,201 +633,89 @@ function App() {
           setTempGoal={setTempGoal}
           setShowExtraIncomeModal={setShowExtraIncomeModal}
           totalExtraIncome={totalExtraIncome}
+          patrimonioTotal={patrimonioTotal} // <-- 🔥 3. Aquí le pasamos el valor calculado
         />
 
         <Alerts categoryData={categoryData} formatCurrency={formatCurrency} />
 
-        <Recommendations recommendations={recommendations} />
+        <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Mostrar ingresos extra si hay */}
-        {filteredExtraIncomes.length > 0 && (
-          <div className="mb-8 bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 border border-green-500/30">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="text-green-300" />
-              💰 Ingresos Extra del Mes
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredExtraIncomes.map((income) => (
-                <div key={income.id} className="bg-white/10 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="text-white font-semibold">{income.description}</p>
-                    <button
-                      onClick={() => deleteExtraIncome(income.id)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-2xl font-bold text-green-300">{formatCurrency(income.amount)}</p>
-                  <p className="text-white/50 text-xs mt-2">{new Date(income.date).toLocaleDateString('es')}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-green-500/30">
-              <p className="text-white text-lg">
-                <span className="text-white/70">Total Ingresos Extra: </span>
-                <span className="font-bold text-green-300">{formatCurrency(totalExtraIncome)}</span>
-              </p>
-            </div>
-          </div>
+        {activeTab === 'overview' && (
+          <OverviewTab
+            categoryData={categoryData}
+            formatCurrency={formatCurrency}
+            recommendations={recommendations}
+            pieData={pieData}
+            spentPercentage={spentPercentage}
+            remaining={remaining}
+            remainingPercentage={remainingPercentage}
+            savingsPercentage={savingsPercentage}
+            totalSavings={totalSavings}
+            savingsGoal={savingsGoal}
+            dailyExpenses={dailyExpenses}
+            months={months}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+          />
         )}
 
-        {/* Mostrar inversiones si hay */}
-        {filteredInvestments.length > 0 && (
-          <div className="mb-8 bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-6 border border-purple-500/30">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="text-purple-300" />
-              💎 Inversiones del Mes
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredInvestments.map((investment) => (
-                <div key={investment.id} className="bg-white/10 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="text-white font-semibold">{investment.description}</p>
-                    <button
-                      onClick={() => deleteInvestment(investment.id)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-2xl font-bold text-purple-300">{formatCurrency(investment.amount)}</p>
-                  <div className="mt-2 space-y-1 text-sm text-white/70">
-                    {investment.fromDisponible > 0 && (
-                      <p>💵 Disponible: {formatCurrency(investment.fromDisponible)}</p>
-                    )}
-                    {investment.fromEmergencia > 0 && (
-                      <p>🚨 Emergencia: {formatCurrency(investment.fromEmergencia)}</p>
-                    )}
-                    {investment.fromExternalSavings > 0 && (
-                      <p>💰 Externos: {formatCurrency(investment.fromExternalSavings)}</p>
-                    )}
-                  </div>
-                  <p className="text-white/50 text-xs mt-2">{new Date(investment.date).toLocaleDateString('es')}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        {activeTab === 'add' && (
+          <AddTab
+            description={description}
+            setDescription={setDescription}
+            amount={amount}
+            setAmount={setAmount}
+            category={category}
+            setCategory={setCategory}
+            date={date}
+            setDate={setDate}
+            categories={categories}
+            addExpense={addExpense}
+            savingDescription={savingDescription}
+            setSavingDescription={setSavingDescription}
+            savingAmount={savingAmount}
+            setSavingAmount={setSavingAmount}
+            savingDate={savingDate}
+            setSavingDate={setSavingDate}
+            addExternalSaving={addExternalSaving}
+            investmentDescription={investmentDescription}
+            setInvestmentDescription={setInvestmentDescription}
+            investmentAmount={investmentAmount}
+            setInvestmentAmount={setInvestmentAmount}
+            investmentSource={investmentSource}
+            setInvestmentSource={setInvestmentSource}
+            investmentDate={investmentDate}
+            setInvestmentDate={setInvestmentDate}
+            addInvestment={addInvestment}
+            remaining={remaining}
+            getCategoryTotal={getCategoryTotal}
+            totalExternalSavings={totalExternalSavings}
+            formatCurrency={formatCurrency}
+            setShowExtraIncomeModal={setShowExtraIncomeModal}
+          />
         )}
 
-        <ExternalSavingsList
-          externalSavings={filteredExternalSavings}
-          formatCurrency={formatCurrency}
-          deleteExternalSaving={deleteExternalSaving}
-          months={months}
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          totalInvestedFromExternalSavings={totalInvestedFromExternalSavings}
-        />
+        {activeTab === 'transactions' && (
+          <TransactionsTab
+            filteredExpenses={filteredExpenses}
+            categories={categories}
+            formatCurrency={formatCurrency}
+            deleteExpense={deleteExpense}
+            months={months}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            filteredExternalSavings={filteredExternalSavings}
+            deleteExternalSaving={deleteExternalSaving}
+            totalInvestedFromExternalSavings={totalInvestedFromExternalSavings}
+            filteredInvestments={filteredInvestments}
+            deleteInvestment={deleteInvestment}
+            filteredExtraIncomes={filteredExtraIncomes}
+            deleteExtraIncome={deleteExtraIncome}
+            totalExtraIncome={totalExtraIncome}
+          />
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <CategoryStatus categoryData={categoryData} formatCurrency={formatCurrency} />
-          </div>
-          <div className="space-y-6">
-            <AddExpenseForm
-              description={description}
-              setDescription={setDescription}
-              amount={amount}
-              setAmount={setAmount}
-              category={category}
-              setCategory={setCategory}
-              date={date}
-              setDate={setDate}
-              categories={categories}
-              addExpense={addExpense}
-            />
-            <AddSavingForm
-              savingDescription={savingDescription}
-              setSavingDescription={setSavingDescription}
-              savingAmount={savingAmount}
-              setSavingAmount={setSavingAmount}
-              savingDate={savingDate}
-              setSavingDate={setSavingDate}
-              addExternalSaving={addExternalSaving}
-            />
-            {/* Formulario de inversión */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
-                  <TrendingUp className="text-white" size={24} />
-                </div>
-                <h3 className="text-xl font-bold text-white">Registrar Inversión</h3>
-              </div>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  value={investmentDescription}
-                  onChange={(e) => setInvestmentDescription(e.target.value)}
-                  placeholder="Descripción inversión"
-                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <input
-                  type="number"
-                  value={investmentAmount}
-                  onChange={(e) => setInvestmentAmount(e.target.value)}
-                  placeholder="Monto"
-                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <select
-                  value={investmentSource}
-                  onChange={(e) => setInvestmentSource(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="disponible" className="bg-gray-800">💵 Dinero Disponible</option>
-                  <option value="emergencia" className="bg-gray-800">🚨 Ahorro Emergencia</option>
-                  <option value="ambos" className="bg-gray-800">🔄 Ambos (50/50)</option>
-                </select>
-                <div className="bg-white/10 rounded-xl p-3 space-y-1 text-sm">
-                  <p className="text-white/70">Fondos disponibles:</p>
-                  <p className="text-white">💵 Disponible: {formatCurrency(remaining)}</p>
-                  <p className="text-white">🚨 Emergencia: {formatCurrency(getCategoryTotal('emergencia') + totalExternalSavings)}
-                    <span className="text-white/50 text-xs ml-1">
-                      (Gastos: {formatCurrency(getCategoryTotal('emergencia'))} + Externos: {formatCurrency(totalExternalSavings)})
-                    </span>
-                  </p>
-                </div>
-                <input
-                  type="date"
-                  value={investmentDate}
-                  onChange={(e) => setInvestmentDate(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <button
-                  onClick={addInvestment}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  💎 Registrar Inversión
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Charts
-          pieData={pieData}
-          spentPercentage={spentPercentage}
-          remaining={remaining}
-          remainingPercentage={remainingPercentage}
-          savingsPercentage={savingsPercentage}
-          totalSavings={totalSavings}
-          savingsGoal={savingsGoal}
-          dailyExpenses={dailyExpenses}
-          months={months}
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          formatCurrency={formatCurrency}
-        />
-
-        <ExpenseList
-          filteredExpenses={filteredExpenses}
-          categories={categories}
-          formatCurrency={formatCurrency}
-          deleteExpense={deleteExpense}
-          months={months}
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-        />
+        {activeTab === 'analytics' && <AnalyticsTab />}
 
         <Modals
           showIncomeModal={showIncomeModal}
