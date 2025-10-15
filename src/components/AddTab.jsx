@@ -1,54 +1,70 @@
-// src/components/AddTab.jsx
+// src/components/AddTab.jsx (versión refactorizada)
 
 import React from 'react';
 import AddExpenseForm from './AddExpenseForm';
 import AddSavingForm from './AddSavingForm';
-import AddInvestmentForm from './AddInvestmentForm'; // Importamos el nuevo componente
+import AddInvestmentForm from './AddInvestmentForm'; // <-- 1. Importa el nuevo componente
 import { Plus } from 'lucide-react';
 
-const AddTab = (props) => {
+// Fíjate que ahora recibe menos props, solo las necesarias
+const AddTab = ({
+    description, setDescription, amount, setAmount, category, setCategory, date, setDate, categories, addExpense,
+    savingDescription, setSavingDescription, savingAmount, setSavingAmount, savingDate, setSavingDate, addExternalSaving,
+    investmentDescription, setInvestmentDescription, investmentAmount, setInvestmentAmount, investmentSource, setInvestmentSource, investmentDate, setInvestmentDate, addInvestment,
+    remaining, getCategoryTotal, totalExternalSavings,
+    formatCurrency,
+    setShowExtraIncomeModal
+}) => {
     return (
-        <div className="space-y-8 animate-fadeIn">
-            {/* Header */}
-            <div className="text-center">
-                <h2 className="text-3xl font-bold text-white mb-2">Centro de Transacciones</h2>
-                <p className="text-white/70 max-w-lg mx-auto">Aquí puedes registrar todos tus movimientos: gastos diarios, ahorros, inversiones y cualquier ingreso extra.</p>
+        <div className="space-y-6">
+            <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">Registrar Transacciones</h2>
+                <p className="text-white/70">Agrega gastos, ahorros, inversiones o ingresos extra</p>
             </div>
 
-            {/* Contenedor principal de formularios */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <AddExpenseForm
+                    description={description} setDescription={setDescription} amount={amount} setAmount={setAmount}
+                    category={category} setCategory={setCategory} date={date} setDate={setDate}
+                    categories={categories} addExpense={addExpense}
+                />
 
-                {/* Columna Izquierda */}
-                <div className="space-y-8">
-                    <AddExpenseForm {...props} />
-                    <AddSavingForm {...props} />
-                </div>
+                <AddSavingForm
+                    savingDescription={savingDescription} setSavingDescription={setSavingDescription}
+                    savingAmount={savingAmount} setSavingAmount={setSavingAmount}
+                    savingDate={savingDate} setSavingDate={setSavingDate}
+                    addExternalSaving={addExternalSaving}
+                />
 
-                {/* Columna Derecha */}
-                <div className="space-y-8">
-                    <AddInvestmentForm {...props} />
+                {/* 2. Reemplaza todo el formulario anterior por este simple componente */}
+                <AddInvestmentForm
+                    investmentDescription={investmentDescription} setInvestmentDescription={setInvestmentDescription}
+                    investmentAmount={investmentAmount} setInvestmentAmount={setInvestmentAmount}
+                    investmentSource={investmentSource} setInvestmentSource={setInvestmentSource}
+                    investmentDate={investmentDate} setInvestmentDate={setInvestmentDate}
+                    addInvestment={addInvestment}
+                    remaining={remaining}
+                    getCategoryTotal={getCategoryTotal}
+                    totalExternalSavings={totalExternalSavings}
+                    formatCurrency={formatCurrency}
+                />
 
-                    {/* Tarjeta para Ingreso Extra */}
-                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-green-500/30 flex flex-col justify-between h-full">
-                        <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="bg-green-500 p-3 rounded-xl">
-                                    <Plus className="text-white" size={24} />
-                                </div>
-                                <h3 className="text-xl font-bold text-white">Añadir Ingreso Extra</h3>
-                            </div>
-                            <p className="text-white/80 mb-6">
-                                Registra dinero que no es parte de tu ingreso fijo (bonos, regalos, ventas, etc.) para que se sume a tu "Dinero Disponible".
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => props.setShowExtraIncomeModal(true)}
-                            className="w-full mt-auto bg-green-500 hover:bg-green-600 text-white py-4 px-6 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2"
-                        >
-                            <Plus className="w-5 h-5" />
-                            Agregar Ingreso Extra
-                        </button>
+                {/* Agregar Ingreso Extra */}
+                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-green-500/30">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-green-500 p-3 rounded-xl"><Plus className="text-white" size={24} /></div>
+                        <h3 className="text-xl font-bold text-white">Añadir Ingreso Extra</h3>
                     </div>
+                    <p className="text-white/90 mb-6 text-sm md:text-base">
+                        Registra dinero adicional que no es parte de tu ingreso mensual fijo (bonos, regalos, ventas, etc.)
+                    </p>
+                    <button
+                        onClick={() => setShowExtraIncomeModal(true)}
+                        className="w-full bg-green-500 hover:bg-green-600 text-white py-4 px-6 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Agregar Ingreso Extra
+                    </button>
                 </div>
             </div>
         </div>

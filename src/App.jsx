@@ -471,6 +471,7 @@ function App() {
   const filteredInvestments = getFilteredInvestments();
   const filteredExtraIncomes = getFilteredExtraIncomes();
 
+  // Cálculos del MES ACTUAL
   const totalExtraIncome = filteredExtraIncomes.reduce((sum, income) => sum + income.amount, 0);
   const totalInvestedFromDisponible = filteredInvestments.reduce((sum, inv) => sum + inv.fromDisponible, 0);
   const totalInvestedFromEmergencia = filteredInvestments.reduce((sum, inv) => sum + inv.fromEmergencia, 0);
@@ -478,7 +479,7 @@ function App() {
 
   const totalSpent = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const remaining = monthlyIncome + totalExtraIncome - totalSpent - totalInvestedFromDisponible;
-  const remainingPercentage = (monthlyIncome + totalExtraIncome) > 0 ? (remaining / (monthlyIncome + totalExtraIncome)) * 100 : 0;
+  const remainingPercentage = (remaining / (monthlyIncome + totalExtraIncome)) * 100;
 
   const filteredExternalSavings = getFilteredExternalSavings();
   const totalExternalSavings = filteredExternalSavings.reduce((sum, saving) => sum + saving.amount, 0);
@@ -488,16 +489,27 @@ function App() {
   const externalSavingsDisplay = totalExternalSavings - totalInvestedFromExternalSavings;
   const totalSavings = getCategoryTotal('ahorros') + totalEmergenciaSavings;
 
-  const savingsPercentage = savingsGoal > 0 ? (totalSavings / savingsGoal) * 100 : 0;
-  const spentPercentage = monthlyIncome > 0 ? (totalSpent / monthlyIncome) * 100 : 0;
+  // 💰 CÁLCULO DEL PATRIMONIO TOTAL (TODOS LOS MESES - ACUMULADO)
+  const allExternalSavings = externalSavings.reduce((sum, saving) => sum + saving.amount, 0);
+  const allInvestments = investments.reduce((sum, inv) => sum + inv.amount, 0);
 
-  // 🔥 =================== AQUÍ ESTÁ LA MAGIA =================== 🔥
-  // 1. Calculamos el total de todas tus inversiones.
-  const totalInvested = filteredInvestments.reduce((sum, investment) => sum + investment.amount, 0);
+  // Calcular todos los gastos de todas las categorías de ahorro (ACUMULADO)
+  const allEmergenciaSavings = expenses
+    .filter(exp => exp.category === 'emergencia')
+    .reduce((sum, exp) => sum + exp.amount, 0);
 
-  // 2. Sumamos todo: lo que te queda, lo que has ahorrado y lo que has invertido.
-  const patrimonioTotal = remaining + totalSavings + totalInvested;
-  // 🔥 ========================================================== 🔥
+  const allAhorrosProgramados = expenses
+    .filter(exp => exp.category === 'ahorros')
+    .reduce((sum, exp) => sum + exp.amount, 0);
+
+  // Calcular inversiones que salieron de ahorros externos (TOTAL)
+  const totalInvestedFromExternalSavingsAll = investments.reduce((sum, inv) => sum + (inv.fromExternalSavings || 0), 0);
+
+  // PATRIMONIO TOTAL = Disponible del mes + Todos los ahorros + Todas las inversiones
+  const patrimonioTotal = remaining + allAhorrosProgramados + (allEmergenciaSavings + allExternalSavings - totalInvestedFromExternalSavingsAll) + allInvestments;
+
+  const savingsPercentage = (totalSavings / savingsGoal) * 100;
+  const spentPercentage = (totalSpent / monthlyIncome) * 100;
 
   const categoryData = categories.map(cat => {
     const spent = getCategoryTotal(cat.value);
@@ -524,6 +536,68 @@ function App() {
         });
       }
     });
+
+    const gustosSpent = getCategoryTotal('gastos-gustos');
+    const gustosPercentage = (gustosSpent / monthlyIncome) * 100;
+    if (gustosPercentage > 20) {
+      recommendations.push({
+        type: 'info',
+        icon: '💡',
+        message: `Los Gastos Gustos representan el ${gustosPercentage.toFixed(0)}% de tu ingreso. Lo ideal es mantenerlos bajo el 20%.`
+      });
+    }
+
+    const entretenimientoSpent = getCategoryTotal('entretenimiento');
+    if (entretenimientoSpent > 40000) {
+      recommendations.push({
+        type: 'tip',
+        icon: '🎯',
+        message: 'Gastas bastante en entretenimiento. Considera buscar alternativas gratuitas o más económicas.'
+      });
+    }
+
+    if (savingsPercentage < 50 && savingsPercentage > 0) {
+      recommendations.push({
+        type: 'goal',
+        icon: '💰',
+        message: `Llevas ${savingsPercentage.toFixed(0)}% de tu meta de ahorro. ¡Sigue así! Intenta reducir gastos no esenciales.`
+      });
+    }
+
+    if (savingsPercentage >= 100) {
+      recommendations.push({
+        type: 'success',
+        icon: '🎉',
+        message: '¡Excelente! Alcanzaste tu meta de ahorro. Considera aumentar tu meta para el próximo mes.'
+      });
+    }
+
+    if (spentPercentage < 70) {
+      recommendations.push({
+        type: 'success',
+        icon: '✅',
+        message: `¡Vas muy bien! Solo has gastado el ${spentPercentage.toFixed(0)}% de tu presupuesto. Mantén este ritmo.`
+      });
+    }
+
+    const transporteSpent = getCategoryTotal('transporte');
+    const transportePercentage = (transporteSpent / monthlyIncome) * 100;
+    if (transportePercentage > 15) {
+      recommendations.push({
+        type: 'tip',
+        icon: '🚴',
+        message: 'El transporte consume mucho de tu presupuesto. Considera compartir viajes o usar transporte público.'
+      });
+    }
+
+    if (filteredInvestments.length > 0) {
+      const totalInvested = filteredInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+      recommendations.push({
+        type: 'success',
+        icon: '💎',
+        message: `¡Genial! Has invertido ${formatCurrency(totalInvested)} este mes. Las inversiones son clave para tu futuro financiero.`
+      });
+    }
 
     if (recommendations.length === 0) {
       recommendations.push({
@@ -633,7 +707,7 @@ function App() {
           setTempGoal={setTempGoal}
           setShowExtraIncomeModal={setShowExtraIncomeModal}
           totalExtraIncome={totalExtraIncome}
-          patrimonioTotal={patrimonioTotal} // <-- 🔥 3. Aquí le pasamos el valor calculado
+          patrimonioTotal={patrimonioTotal}
         />
 
         <Alerts categoryData={categoryData} formatCurrency={formatCurrency} />
@@ -695,23 +769,36 @@ function App() {
           />
         )}
 
+        // Reemplaza este bloque en App.jsx (línea ~680 aproximadamente)
+
         {activeTab === 'transactions' && (
           <TransactionsTab
+            // Datos filtrados por mes
             filteredExpenses={filteredExpenses}
+            filteredExternalSavings={filteredExternalSavings}
+            filteredInvestments={filteredInvestments}
+            filteredExtraIncomes={filteredExtraIncomes}
+
+            // AGREGAR ESTAS LÍNEAS - Datos completos (todos los meses)
+            allExpenses={expenses}
+            allExternalSavings={externalSavings}
+            allInvestments={investments}
+            allExtraIncomes={extraIncomes}
+
+            // Funciones de eliminación
+            deleteExpense={deleteExpense}
+            deleteExternalSaving={deleteExternalSaving}
+            deleteInvestment={deleteInvestment}
+            deleteExtraIncome={deleteExtraIncome}
+
+            // Datos generales
             categories={categories}
             formatCurrency={formatCurrency}
-            deleteExpense={deleteExpense}
             months={months}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
-            filteredExternalSavings={filteredExternalSavings}
-            deleteExternalSaving={deleteExternalSaving}
-            totalInvestedFromExternalSavings={totalInvestedFromExternalSavings}
-            filteredInvestments={filteredInvestments}
-            deleteInvestment={deleteInvestment}
-            filteredExtraIncomes={filteredExtraIncomes}
-            deleteExtraIncome={deleteExtraIncome}
             totalExtraIncome={totalExtraIncome}
+            totalInvestedFromExternalSavings={totalInvestedFromExternalSavings}
           />
         )}
 
