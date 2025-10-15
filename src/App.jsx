@@ -769,7 +769,7 @@ function App() {
           />
         )}
 
-        // Reemplaza este bloque en App.jsx (línea ~680 aproximadamente)
+        
 
         {activeTab === 'transactions' && (
           <TransactionsTab
