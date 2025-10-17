@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TrendingUp, DollarSign, Calendar } from 'lucide-react';
+import { TrendingUp, DollarSign, Calendar, Briefcase } from 'lucide-react';
 
 const TransactionsTab = ({
     // Datos filtrados por mes
@@ -7,18 +7,21 @@ const TransactionsTab = ({
     filteredExternalSavings,
     filteredInvestments,
     filteredExtraIncomes,
+    filteredSalaryIncomes = [],
 
     // Datos completos (todos los meses)
     allExpenses = [],
     allExternalSavings = [],
     allInvestments = [],
     allExtraIncomes = [],
+    allSalaryIncomes = [],
 
     // Funciones de eliminación
     deleteExpense,
     deleteExternalSaving,
     deleteInvestment,
     deleteExtraIncome,
+    deleteSalaryIncome,
 
     // Datos generales
     categories,
@@ -36,6 +39,7 @@ const TransactionsTab = ({
     const savingsToShow = showAllHistory ? allExternalSavings : filteredExternalSavings;
     const investmentsToShow = showAllHistory ? allInvestments : filteredInvestments;
     const incomesToShow = showAllHistory ? allExtraIncomes : filteredExtraIncomes;
+    const salariesToShow = showAllHistory ? allSalaryIncomes : filteredSalaryIncomes;
 
     // Función auxiliar para estilos de botones
     const getButtonClass = (mode) => (
@@ -56,8 +60,8 @@ const TransactionsTab = ({
                     <button
                         onClick={() => setShowAllHistory(!showAllHistory)}
                         className={`px-4 py-2 rounded-xl font-semibold transition-all flex items-center gap-2 ${showAllHistory
-                                ? 'bg-yellow-500 text-white shadow-lg'
-                                : 'bg-white/20 text-white hover:bg-white/30'
+                            ? 'bg-yellow-500 text-white shadow-lg'
+                            : 'bg-white/20 text-white hover:bg-white/30'
                             }`}
                     >
                         <Calendar className="w-4 h-4" />
@@ -73,9 +77,12 @@ const TransactionsTab = ({
                     </div>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
                     <button onClick={() => setViewMode('all')} className={getButtonClass('all')}>
                         Todo
+                    </button>
+                    <button onClick={() => setViewMode('salaries')} className={getButtonClass('salaries')}>
+                        💼 Salarios
                     </button>
                     <button onClick={() => setViewMode('expenses')} className={getButtonClass('expenses')}>
                         Gastos
@@ -87,10 +94,57 @@ const TransactionsTab = ({
                         Inversiones
                     </button>
                     <button onClick={() => setViewMode('income')} className={getButtonClass('income')}>
-                        Ingresos Extra
+                        Extras
                     </button>
                 </div>
             </div>
+
+            {/* Salarios Quincenales */}
+            {(viewMode === 'all' || viewMode === 'salaries') && salariesToShow && salariesToShow.length > 0 && (
+                <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-md rounded-2xl p-6 border border-blue-500/30">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <Briefcase className="text-blue-300" />
+                        💼 Salarios Quincenales {showAllHistory ? '(Todos los meses)' : `- ${months[selectedMonth]} ${selectedYear}`}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {salariesToShow
+                            .sort((a, b) => new Date(b.date) - new Date(a.date))
+                            .map((salary) => (
+                                <div key={salary.id} className="bg-white/10 rounded-xl p-4 border-2 border-blue-400/30">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <p className="text-white font-semibold">💼 Salario - {salary.period === 'quincena-1' ? 'Quincena 1' : 'Quincena 2'}</p>
+                                            <p className="text-xs text-blue-200 mt-1">
+                                                {salary.period === 'quincena-1' ? '📆 Días 1-15' : '📅 Días 16-31'}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => deleteSalaryIncome(salary.id)}
+                                            className="text-red-400 hover:text-red-300 transition-colors text-xl"
+                                            title="Eliminar salario"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                    <p className="text-3xl font-bold text-blue-300">{formatCurrency(salary.amount)}</p>
+                                    <p className="text-white/50 text-xs mt-2">
+                                        📅 {new Date(salary.date).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
+                                </div>
+                            ))}
+                    </div>
+                    {!showAllHistory && salariesToShow.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-blue-500/30">
+                            <p className="text-white text-lg">
+                                <span className="text-white/70">Total del mes: </span>
+                                <span className="font-bold text-blue-300">
+                                    {formatCurrency(salariesToShow.reduce((sum, s) => sum + s.amount, 0))}
+                                </span>
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Ingresos Extra */}
             {(viewMode === 'all' || viewMode === 'income') && incomesToShow && incomesToShow.length > 0 && (
@@ -251,6 +305,9 @@ const TransactionsTab = ({
             {/* Mensaje cuando no hay datos */}
             {viewMode !== 'all' && (
                 <>
+                    {viewMode === 'salaries' && (!salariesToShow || salariesToShow.length === 0) && (
+                        <div className="text-center text-white/60 py-8">No hay salarios registrados para mostrar</div>
+                    )}
                     {viewMode === 'expenses' && (!expensesToShow || expensesToShow.length === 0) && (
                         <div className="text-center text-white/60 py-8">No hay gastos para mostrar</div>
                     )}

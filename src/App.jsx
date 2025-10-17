@@ -46,7 +46,14 @@ function App() {
   const [extraIncomeAmount, setExtraIncomeAmount] = useState('');
   const [extraIncomeDate, setExtraIncomeDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const [monthlyIncome, setMonthlyIncome] = useState(975000);
+  // Estados para salarios quincenales
+  const [salaryIncomes, setSalaryIncomes] = useState([]);
+  const [showSalaryModal, setShowSalaryModal] = useState(false);
+  const [salaryAmount, setSalaryAmount] = useState('975000');
+  const [salaryDate, setSalaryDate] = useState(new Date().toISOString().split('T')[0]);
+  const [salaryPeriod, setSalaryPeriod] = useState('quincena-1');
+
+  const [monthlyIncome, setMonthlyIncome] = useState(975000); // Ingreso quincenal base
   const [savingsGoal, setSavingsGoal] = useState(380000);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
@@ -54,7 +61,7 @@ function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [calculatorAmount, setCalculatorAmount] = useState('');
   const [calculatorResult, setCalculatorResult] = useState(0);
-  const [tempIncome, setTempIncome] = useState('975000');
+  const [tempIncome, setTempIncome] = useState('975000'); // Ingreso quincenal base temporal
   const [tempGoal, setTempGoal] = useState('380000');
 
   const [expenses, setExpenses] = useState([]);
@@ -98,19 +105,32 @@ function App() {
         subscribeToExternalSavings(user.uid);
         subscribeToInvestments(user.uid);
         subscribeToExtraIncomes(user.uid);
+        subscribeToSalaryIncomes(user.uid);
       }
     });
     return () => unsubscribe();
   }, []);
+
+  const subscribeToSalaryIncomes = (userId) => {
+    const q = query(collection(db, 'salaryIncomes'), where('userId', '==', userId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const incomesData = [];
+      snapshot.forEach((doc) => {
+        incomesData.push({ id: doc.id, ...doc.data() });
+      });
+      setSalaryIncomes(incomesData);
+    });
+    return unsubscribe;
+  };
 
   const loadUserProfile = async (userId) => {
     try {
       const userDoc = await getDoc(doc(db, 'userProfiles', userId));
       if (userDoc.exists()) {
         const data = userDoc.data();
-        setMonthlyIncome(data.monthlyIncome || 975000);
+        setMonthlyIncome(data.quincenalIncome || data.monthlyIncome || 975000); // Soportar ambos nombres
         setSavingsGoal(data.savingsGoal || 380000);
-        setTempIncome(String(data.monthlyIncome || 975000));
+        setTempIncome(String(data.quincenalIncome || data.monthlyIncome || 975000));
         setTempGoal(String(data.savingsGoal || 380000));
       }
     } catch (error) {
@@ -327,24 +347,70 @@ function App() {
     }
   };
 
+  const addSalaryIncome = async () => {
+    if (!salaryAmount || !currentUser) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const periodLabel = salaryPeriod === 'quincena-1' ? 'Quincena 1' : 'Quincena 2';
+      const incomeData = {
+        userId: currentUser.uid,
+        description: `💼 Salario - ${periodLabel}`,
+        amount: parseFloat(salaryAmount),
+        date: salaryDate,
+        period: salaryPeriod,
+        timestamp: new Date().toISOString(),
+        type: 'salary'
+      };
+      await addDoc(collection(db, 'salaryIncomes'), incomeData);
+      setSalaryAmount('975000');
+      setSalaryDate(new Date().toISOString().split('T')[0]);
+      setSalaryPeriod('quincena-1');
+      setShowSalaryModal(false);
+      alert('💰 Salario quincenal registrado exitosamente');
+    } catch (error) {
+      console.error('Error al agregar salario:', error);
+      alert('Error al agregar salario: ' + error.message);
+    }
+  };
+
+  const deleteSalaryIncome = async (id) => {
+    if (window.confirm('¿Estás seguro de eliminar este registro de salario?')) {
+      try {
+        await deleteDoc(doc(db, 'salaryIncomes', id));
+      } catch (error) {
+        console.error('Error eliminando salario:', error);
+      }
+    }
+  };
+
+  const getFilteredSalaryIncomes = () => {
+    return salaryIncomes.filter(income => {
+      const incomeDate = new Date(income.date);
+      return incomeDate.getMonth() === selectedMonth && incomeDate.getFullYear() === selectedYear;
+    });
+  };
+
   const getFilteredExternalSavings = () => {
     return externalSavings.filter(saving => {
-      const [year, month] = saving.date.split('-').map(Number);
-      return month - 1 === selectedMonth && year === selectedYear;
+      const savingDate = new Date(saving.date);
+      return savingDate.getMonth() === selectedMonth && savingDate.getFullYear() === selectedYear;
     });
   };
 
   const getFilteredInvestments = () => {
     return investments.filter(investment => {
-      const [year, month] = investment.date.split('-').map(Number);
-      return month - 1 === selectedMonth && year === selectedYear;
+      const investmentDate = new Date(investment.date);
+      return investmentDate.getMonth() === selectedMonth && investmentDate.getFullYear() === selectedYear;
     });
   };
 
   const getFilteredExtraIncomes = () => {
     return extraIncomes.filter(income => {
-      const [year, month] = income.date.split('-').map(Number);
-      return month - 1 === selectedMonth && year === selectedYear;
+      const incomeDate = new Date(income.date);
+      return incomeDate.getMonth() === selectedMonth && incomeDate.getFullYear() === selectedYear;
     });
   };
 
@@ -470,17 +536,62 @@ function App() {
   const filteredExpenses = getFilteredExpenses();
   const filteredInvestments = getFilteredInvestments();
   const filteredExtraIncomes = getFilteredExtraIncomes();
+  const filteredSalaryIncomes = getFilteredSalaryIncomes();
 
-  // Cálculos del MES ACTUAL
+  // 💰 CÁLCULOS DE INGRESOS Y GASTOS DEL MES ACTUAL
+  const totalSalaryIncome = filteredSalaryIncomes.reduce((sum, income) => sum + income.amount, 0);
   const totalExtraIncome = filteredExtraIncomes.reduce((sum, income) => sum + income.amount, 0);
+  const totalSpent = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+  // Inversiones del mes actual
   const totalInvestedFromDisponible = filteredInvestments.reduce((sum, inv) => sum + inv.fromDisponible, 0);
   const totalInvestedFromEmergencia = filteredInvestments.reduce((sum, inv) => sum + inv.fromEmergencia, 0);
   const totalInvestedFromExternalSavings = filteredInvestments.reduce((sum, inv) => sum + (inv.fromExternalSavings || 0), 0);
 
-  const totalSpent = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const remaining = monthlyIncome + totalExtraIncome - totalSpent - totalInvestedFromDisponible;
-  const remainingPercentage = (remaining / (monthlyIncome + totalExtraIncome)) * 100;
+  // 💵 INGRESO TOTAL DEL MES
+  // Solo muestra los salarios que YA REGISTRASTE + ingresos extras
+  // NO incluye el base quincenal automáticamente
+  const monthlyIncomeCalculated = totalSalaryIncome + totalExtraIncome;
 
+  // 💸 DISPONIBLE DEL MES = Ingresos del mes - Gastos del mes - Inversiones desde disponible
+  const remaining = monthlyIncomeCalculated - totalSpent - totalInvestedFromDisponible;
+  const remainingPercentage = monthlyIncomeCalculated > 0 ? (remaining / monthlyIncomeCalculated) * 100 : 0;
+
+  // 🏦 CÁLCULO DEL PATRIMONIO TOTAL (Como cuenta bancaria)
+  // Patrimonio = TODO el dinero que TIENES acumulado
+
+  // 1. Calcular TODOS los ingresos REGISTRADOS (solo salarios que TÚ registraste + extras)
+  const allSalaryIncomes = salaryIncomes.reduce((sum, income) => sum + income.amount, 0);
+  const allExtraIncomes = extraIncomes.reduce((sum, income) => sum + income.amount, 0);
+
+  // NO incluir monthlyIncome automáticamente - solo cuando lo registres
+  const totalIngresoHistorico = allSalaryIncomes + allExtraIncomes;
+
+  // 2. Calcular TODOS los gastos históricos (solo categorías que son GASTOS REALES)
+  // NO incluir: ahorros, emergencia (son movimientos internos)
+  const categoriasGastosReales = [
+    'gastos-gustos',
+    'gastos-obligatorios',
+    'diezmos',
+    'transporte',
+    'entretenimiento',
+    'otros'
+  ];
+  const totalGastosHistoricos = expenses
+    .filter(exp => categoriasGastosReales.includes(exp.category))
+    .reduce((sum, exp) => sum + exp.amount, 0);
+
+  // 3. Calcular TODAS las inversiones (dinero que SALIÓ)
+  const totalInversionesHistoricas = investments.reduce((sum, inv) => sum + inv.amount, 0);
+
+  // 4. Calcular ahorros externos históricos
+  const totalAhorrosExternosHistoricos = externalSavings.reduce((sum, saving) => sum + saving.amount, 0);
+
+  // 🏦 PATRIMONIO TOTAL = Ingresos - Gastos - Inversiones + Ahorros Externos
+  // (Es el dinero REAL que tienes distribuido en tus bolsillos)
+  const patrimonioTotal = totalIngresoHistorico - totalGastosHistoricos - totalInversionesHistoricas + totalAhorrosExternosHistoricos;
+
+  // 📊 CÁLCULOS PARA EL MES ACTUAL (para las tarjetas y gráficos)
   const filteredExternalSavings = getFilteredExternalSavings();
   const totalExternalSavings = filteredExternalSavings.reduce((sum, saving) => sum + saving.amount, 0);
 
@@ -489,27 +600,8 @@ function App() {
   const externalSavingsDisplay = totalExternalSavings - totalInvestedFromExternalSavings;
   const totalSavings = getCategoryTotal('ahorros') + totalEmergenciaSavings;
 
-  // 💰 CÁLCULO DEL PATRIMONIO TOTAL (TODOS LOS MESES - ACUMULADO)
-  const allExternalSavings = externalSavings.reduce((sum, saving) => sum + saving.amount, 0);
-  const allInvestments = investments.reduce((sum, inv) => sum + inv.amount, 0);
-
-  // Calcular todos los gastos de todas las categorías de ahorro (ACUMULADO)
-  const allEmergenciaSavings = expenses
-    .filter(exp => exp.category === 'emergencia')
-    .reduce((sum, exp) => sum + exp.amount, 0);
-
-  const allAhorrosProgramados = expenses
-    .filter(exp => exp.category === 'ahorros')
-    .reduce((sum, exp) => sum + exp.amount, 0);
-
-  // Calcular inversiones que salieron de ahorros externos (TOTAL)
-  const totalInvestedFromExternalSavingsAll = investments.reduce((sum, inv) => sum + (inv.fromExternalSavings || 0), 0);
-
-  // PATRIMONIO TOTAL = Disponible del mes + Todos los ahorros + Todas las inversiones
-  const patrimonioTotal = remaining + allAhorrosProgramados + (allEmergenciaSavings + allExternalSavings - totalInvestedFromExternalSavingsAll) + allInvestments;
-
   const savingsPercentage = (totalSavings / savingsGoal) * 100;
-  const spentPercentage = (totalSpent / monthlyIncome) * 100;
+  const spentPercentage = (totalSpent / monthlyIncomeCalculated) * 100;
 
   const categoryData = categories.map(cat => {
     const spent = getCategoryTotal(cat.value);
@@ -538,7 +630,7 @@ function App() {
     });
 
     const gustosSpent = getCategoryTotal('gastos-gustos');
-    const gustosPercentage = (gustosSpent / monthlyIncome) * 100;
+    const gustosPercentage = (gustosSpent / monthlyIncomeCalculated) * 100;
     if (gustosPercentage > 20) {
       recommendations.push({
         type: 'info',
@@ -581,7 +673,7 @@ function App() {
     }
 
     const transporteSpent = getCategoryTotal('transporte');
-    const transportePercentage = (transporteSpent / monthlyIncome) * 100;
+    const transportePercentage = (transporteSpent / monthlyIncomeCalculated) * 100;
     if (transportePercentage > 15) {
       recommendations.push({
         type: 'tip',
@@ -670,7 +762,7 @@ function App() {
           setShowCalculator={setShowCalculator}
           setTempIncome={setTempIncome}
           setTempGoal={setTempGoal}
-          monthlyIncome={monthlyIncome}
+          monthlyIncome={monthlyIncomeCalculated}
           savingsGoal={savingsGoal}
         />
 
@@ -693,7 +785,7 @@ function App() {
         />
 
         <SummaryCards
-          monthlyIncome={monthlyIncome}
+          monthlyIncome={monthlyIncomeCalculated}
           totalSpent={totalSpent}
           remaining={remaining}
           remainingPercentage={remainingPercentage}
@@ -766,32 +858,27 @@ function App() {
             totalExternalSavings={totalExternalSavings}
             formatCurrency={formatCurrency}
             setShowExtraIncomeModal={setShowExtraIncomeModal}
+            setShowSalaryModal={setShowSalaryModal}
           />
         )}
 
-        
-
         {activeTab === 'transactions' && (
           <TransactionsTab
-            // Datos filtrados por mes
             filteredExpenses={filteredExpenses}
             filteredExternalSavings={filteredExternalSavings}
             filteredInvestments={filteredInvestments}
             filteredExtraIncomes={filteredExtraIncomes}
-
-            // AGREGAR ESTAS LÍNEAS - Datos completos (todos los meses)
+            filteredSalaryIncomes={filteredSalaryIncomes}
             allExpenses={expenses}
             allExternalSavings={externalSavings}
             allInvestments={investments}
             allExtraIncomes={extraIncomes}
-
-            // Funciones de eliminación
+            allSalaryIncomes={salaryIncomes}
             deleteExpense={deleteExpense}
             deleteExternalSaving={deleteExternalSaving}
             deleteInvestment={deleteInvestment}
             deleteExtraIncome={deleteExtraIncome}
-
-            // Datos generales
+            deleteSalaryIncome={deleteSalaryIncome}
             categories={categories}
             formatCurrency={formatCurrency}
             months={months}
@@ -832,6 +919,15 @@ function App() {
           extraIncomeDate={extraIncomeDate}
           setExtraIncomeDate={setExtraIncomeDate}
           addExtraIncome={addExtraIncome}
+          showSalaryModal={showSalaryModal}
+          setShowSalaryModal={setShowSalaryModal}
+          salaryAmount={salaryAmount}
+          setSalaryAmount={setSalaryAmount}
+          salaryDate={salaryDate}
+          setSalaryDate={setSalaryDate}
+          salaryPeriod={salaryPeriod}
+          setSalaryPeriod={setSalaryPeriod}
+          addSalaryIncome={addSalaryIncome}
         />
       </div>
     </div>

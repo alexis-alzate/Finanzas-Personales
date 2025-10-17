@@ -67,8 +67,8 @@ const Sidebar = ({
                             >
                                 <Edit className="w-5 h-5 text-blue-300" />
                                 <div className="text-left flex-1">
-                                    <p className="font-semibold">Editar Ingreso Mensual</p>
-                                    <p className="text-xs text-white/70">Actualizar ingreso fijo</p>
+                                    <p className="font-semibold">💼 Ingreso Quincenal Base</p>
+                                    <p className="text-xs text-white/70">Tu salario cada 15 días</p>
                                 </div>
                             </button>
 
@@ -140,7 +140,7 @@ const Sidebar = ({
 
                     <div className="mt-4 p-3 bg-white/5 rounded-xl">
                         <p className="text-white/50 text-xs text-center">
-                            ZaetaSoft 
+                            ZaetaSoft
                         </p>
                     </div>
                 </div>
