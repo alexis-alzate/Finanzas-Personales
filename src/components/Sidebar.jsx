@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, Settings, Calculator, LogOut, Edit, Target, TrendingUp, BarChart3 } from 'lucide-react';
+import { BarChart3, Calculator, Edit, LogOut, Target, TrendingUp, X } from 'lucide-react';
 
 const Sidebar = ({
     isOpen,
