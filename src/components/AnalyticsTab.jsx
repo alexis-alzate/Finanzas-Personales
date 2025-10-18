@@ -1,157 +1,73 @@
 import React from 'react';
-import AddExpenseForm from './AddExpenseForm';
-import AddSavingForm from './AddSavingForm';
-import { TrendingUp, Plus } from 'lucide-react';
+import { TrendingUp, BarChart3, PieChart, Calendar } from 'lucide-react';
 
-const AddTab = ({
-    // Props para gastos
-    description,
-    setDescription,
-    amount,
-    setAmount,
-    category,
-    setCategory,
-    date,
-    setDate,
-    categories,
-    addExpense,
-    // Props para ahorros externos
-    savingDescription,
-    setSavingDescription,
-    savingAmount,
-    setSavingAmount,
-    savingDate,
-    setSavingDate,
-    addExternalSaving,
-    // Props para inversiones
-    investmentDescription,
-    setInvestmentDescription,
-    investmentAmount,
-    setInvestmentAmount,
-    investmentSource,
-    setInvestmentSource,
-    investmentDate,
-    setInvestmentDate,
-    addInvestment,
-    remaining,
-    getCategoryTotal,
-    totalExternalSavings,
-    formatCurrency,
-    // Props para ingresos extra
-    setShowExtraIncomeModal
-}) => {
+const AnalyticsTab = () => {
+    const upcomingFeatures = [
+        {
+            icon: BarChart3,
+            title: 'Comparación de Meses',
+            description: 'Compara tus gastos y ahorros mes a mes',
+            color: 'from-blue-500 to-cyan-500'
+        },
+        {
+            icon: TrendingUp,
+            title: 'Proyecciones',
+            description: 'Predicciones de gastos y ahorros futuros',
+            color: 'from-green-500 to-emerald-500'
+        },
+        {
+            icon: PieChart,
+            title: 'Análisis Detallado',
+            description: 'Reportes profundos de tus finanzas',
+            color: 'from-purple-500 to-pink-500'
+        },
+        {
+            icon: Calendar,
+            title: 'Historial Anual',
+            description: 'Vista completa de todo el año',
+            color: 'from-orange-500 to-red-500'
+        }
+    ];
+
     return (
         <div className="space-y-6 animate-fadeIn">
-            {/* Header */}
-            <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Registrar Transacciones</h2>
-                <p className="text-white/70">Agrega gastos, ahorros, inversiones o ingresos extra</p>
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-3">Análisis Avanzado</h2>
+                <p className="text-white/70 text-lg">Próximamente disponible</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Agregar Gasto */}
-                <AddExpenseForm
-                    description={description}
-                    setDescription={setDescription}
-                    amount={amount}
-                    setAmount={setAmount}
-                    category={category}
-                    setCategory={setCategory}
-                    date={date}
-                    setDate={setDate}
-                    categories={categories}
-                    addExpense={addExpense}
-                />
-
-                {/* Agregar Ahorro Externo */}
-                <AddSavingForm
-                    savingDescription={savingDescription}
-                    setSavingDescription={setSavingDescription}
-                    savingAmount={savingAmount}
-                    setSavingAmount={setSavingAmount}
-                    savingDate={savingDate}
-                    setSavingDate={setSavingDate}
-                    addExternalSaving={addExternalSaving}
-                />
-
-                {/* Agregar Inversión */}
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
-                            <TrendingUp className="text-white" size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-white">Registrar Inversión</h3>
-                    </div>
-                    <div className="space-y-4">
-                        <input
-                            type="text"
-                            value={investmentDescription}
-                            onChange={(e) => setInvestmentDescription(e.target.value)}
-                            placeholder="Descripción inversión"
-                            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                        <input
-                            type="number"
-                            value={investmentAmount}
-                            onChange={(e) => setInvestmentAmount(e.target.value)}
-                            placeholder="Monto"
-                            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                        <select
-                            value={investmentSource}
-                            onChange={(e) => setInvestmentSource(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {upcomingFeatures.map((feature, index) => {
+                    const Icon = feature.icon;
+                    return (
+                        <div
+                            key={index}
+                            className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:scale-105 transition-all cursor-pointer"
                         >
-                            <option value="disponible" className="bg-gray-800">💵 Dinero Disponible</option>
-                            <option value="emergencia" className="bg-gray-800">🚨 Ahorro Emergencia</option>
-                            <option value="ambos" className="bg-gray-800">🔄 Ambos (50/50)</option>
-                        </select>
-                        <div className="bg-white/10 rounded-xl p-3 space-y-1 text-sm">
-                            <p className="text-white/70">Fondos disponibles:</p>
-                            <p className="text-white">💵 Disponible: {formatCurrency(remaining)}</p>
-                            <p className="text-white">🚨 Emergencia: {formatCurrency(getCategoryTotal('emergencia') + totalExternalSavings)}
-                                <span className="text-white/50 text-xs ml-1">
-                                    (Gastos: {formatCurrency(getCategoryTotal('emergencia'))} + Externos: {formatCurrency(totalExternalSavings)})
-                                </span>
-                            </p>
+                            <div className={`inline-flex p-4 rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
+                                <Icon className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                            <p className="text-white/70">{feature.description}</p>
+                            <div className="mt-4 inline-flex items-center gap-2 text-sm text-white/50">
+                                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                                En desarrollo
+                            </div>
                         </div>
-                        <input
-                            type="date"
-                            value={investmentDate}
-                            onChange={(e) => setInvestmentDate(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                        <button
-                            onClick={addInvestment}
-                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 px-6 rounded-xl font-bold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                        >
-                            💎 Registrar Inversión
-                        </button>
-                    </div>
-                </div>
+                    );
+                })}
+            </div>
 
-                {/* Agregar Ingreso Extra */}
-                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-green-500/30">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="bg-green-500 p-3 rounded-xl">
-                            <Plus className="text-white" size={24} />
-                        </div>
-                        <h3 className="text-xl font-bold text-white">Ingreso Extra</h3>
-                    </div>
-                    <p className="text-white/80 mb-6">
-                        Registra dinero adicional que no es parte de tu ingreso mensual fijo (bonos, regalos, ventas, etc.)
-                    </p>
-                    <button
-                        onClick={() => setShowExtraIncomeModal(true)}
-                        className="w-full bg-green-500 hover:bg-green-600 text-white py-4 px-6 rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Agregar Ingreso Extra
-                    </button>
-                </div>
+            <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-md rounded-2xl p-8 border border-yellow-500/30 text-center">
+                <p className="text-white text-lg mb-4">
+                    🚀 Estas funciones estarán disponibles en futuras actualizaciones
+                </p>
+                <p className="text-white/70">
+                    Mientras tanto, disfruta de todas las funciones actuales en las otras pestañas
+                </p>
             </div>
         </div>
     );
 };
 
-export default AddTab;
+export default AnalyticsTab;
