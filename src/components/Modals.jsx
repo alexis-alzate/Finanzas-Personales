@@ -39,103 +39,55 @@ const Modals = ({
     setSalaryPeriod,
     addSalaryIncome
 }) => {
-
     return (
         <>
-            {/* Modal de Ingreso Quincenal Base - VERSIÓN MEJORADA */}
+            {/* Modal de Ingreso Quincenal Base */}
             {showIncomeModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-                    <div className="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-3xl shadow-2xl p-8 max-w-md w-full border border-purple-400/30">
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 bg-purple-500/20 rounded-xl">
-                                    <DollarSign className="w-6 h-6 text-purple-400" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-white">Ingreso Quincenal Base</h2>
-                            </div>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+                        <h3 className="text-2xl font-bold text-gray-800 mb-4">💼 Ingreso Quincenal Base</h3>
+                        <p className="text-gray-600 mb-6">Ingresa tu salario base quincenal (cada 15 días)</p>
+                        <input
+                            type="number"
+                            value={tempIncome}
+                            onChange={(e) => setTempIncome(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all mb-4"
+                            placeholder="975000"
+                        />
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                            <p className="text-sm text-blue-800">
+                                💡 <strong>Nota:</strong> Este es tu ingreso base quincenal.<br />
+                                Tu ingreso mensual estimado sería: <strong>{formatCurrency((parseFloat(tempIncome) || 0) * 2)}</strong>
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => setShowIncomeModal(false)}
-                                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+                                className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all"
                             >
-                                <X className="w-5 h-5 text-white" />
+                                Cancelar
                             </button>
-                        </div>
-
-                        <p className="text-purple-200 mb-6 font-medium">
-                            💼 Configura tu salario base que recibes cada 15 días
-                        </p>
-
-                        <div className="space-y-4">
-                            {/* Monto del Salario Base */}
-                            <div>
-                                <label className="block text-sm font-semibold text-purple-200 mb-2">
-                                    💰 Salario Quincenal Base
-                                </label>
-                                <input
-                                    type="number"
-                                    value={tempIncome}
-                                    onChange={(e) => setTempIncome(e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/10 backdrop-blur border-2 border-purple-300/30 text-white placeholder-purple-300/50 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all text-lg font-semibold"
-                                    placeholder="975000"
-                                />
-                                <p className="text-xs text-purple-300/60 mt-2">
-                                    Vista previa: {formatCurrency(parseFloat(tempIncome) || 0)}
-                                </p>
-                            </div>
-
-                            {/* Info del ingreso mensual */}
-                            <div className="bg-blue-500/20 border border-blue-400/30 rounded-xl p-4">
-                                <p className="text-sm text-blue-200">
-                                    💡 <strong>Nota:</strong> Este es tu ingreso base quincenal.<br />
-                                    Tu ingreso mensual estimado sería: <strong>{formatCurrency((parseFloat(tempIncome) || 0) * 2)}</strong>
-                                </p>
-                            </div>
-
-                            {/* Explicación adicional */}
-                            <div className="bg-purple-500/20 border border-purple-400/30 rounded-xl p-4">
-                                <p className="text-sm text-purple-200">
-                                    📅 <strong>¿Qué es esto?</strong><br />
-                                    Este es el monto fijo que ganas cada quincena. Se usa para calcular tu presupuesto automáticamente.
-                                </p>
-                            </div>
-
-                            {/* Botones */}
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    onClick={() => setShowIncomeModal(false)}
-                                    className="flex-1 bg-white/10 backdrop-blur text-white py-3 rounded-xl font-semibold hover:bg-white/20 transition-all border border-white/20"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        const newIncome = parseFloat(tempIncome);
-                                        if (newIncome > 0) {
-                                            setMonthlyIncome(newIncome);
-                                            await updateUserProfile({
-                                                quincenalIncome: newIncome,
-                                                monthlyIncome: newIncome
-                                            });
-                                            setShowIncomeModal(false);
-                                            alert('✅ Ingreso quincenal base guardado correctamente');
-                                        } else {
-                                            alert('⚠️ Por favor ingresa un monto válido mayor a 0');
-                                        }
-                                    }}
-                                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-bold hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
-                                >
-                                    Guardar Configuración
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => {
+                                    const newIncome = parseFloat(tempIncome);
+                                    if (newIncome > 0) {
+                                        setMonthlyIncome(newIncome);
+                                        updateUserProfile({ quincenalIncome: newIncome });
+                                        setShowIncomeModal(false);
+                                    }
+                                }}
+                                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition-all"
+                            >
+                                Guardar
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-
             {/* Modal de Meta de Ahorro */}
             {showGoalModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
                         <h3 className="text-2xl font-bold text-gray-800 mb-4">Editar Meta de Ahorro</h3>
                         <p className="text-gray-600 mb-6">¿Cuánto quieres ahorrar este mes?</p>
@@ -173,7 +125,7 @@ const Modals = ({
 
             {/* Modal de Ingreso Extra */}
             {showExtraIncomeModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-2xl p-8 max-w-md w-full">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
@@ -254,7 +206,7 @@ const Modals = ({
 
             {/* Modal de Salario Quincenal */}
             {showSalaryModal && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl shadow-2xl p-8 max-w-md w-full border border-purple-400/30">
                         <div className="flex justify-between items-center mb-6">
                             <div className="flex items-center gap-3">
@@ -370,7 +322,7 @@ const Modals = ({
 
             {/* Modal de Calculadora */}
             {showCalculator && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl shadow-2xl p-8 max-w-md w-full">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
