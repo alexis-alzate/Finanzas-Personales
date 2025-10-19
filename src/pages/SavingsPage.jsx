@@ -3,7 +3,6 @@ import { PiggyBank, PlusCircle, TrendingUp, Eye } from 'lucide-react';
 import BottomSheet from '../components/BottomSheet';
 
 function SavingsPage({
-    // Props del sistema viejo (ahorros externos)
     savingDescription,
     setSavingDescription,
     savingAmount,
@@ -11,8 +10,6 @@ function SavingsPage({
     savingDate,
     setSavingDate,
     addExternalSaving,
-
-    // Props de inversiones
     investmentDescription,
     setInvestmentDescription,
     investmentAmount,
@@ -22,24 +19,18 @@ function SavingsPage({
     investmentDate,
     setInvestmentDate,
     addInvestment,
-
-    // Props de listas
     filteredExternalSavings,
     filteredInvestments,
     deleteExternalSaving,
     deleteInvestment,
-
-    // Props generales
     formatCurrency,
     getCategoryTotal,
     remaining,
     totalExternalSavings,
-
-    // Props del modal de ahorros unificado (NUEVO SISTEMA)
     setShowSavingModal
 }) {
     const [showMenu, setShowMenu] = useState(true);
-    const [activeView, setActiveView] = useState(null); // 'investments', 'list'
+    const [activeView, setActiveView] = useState(null);
 
     const menuOptions = [
         {
@@ -67,7 +58,6 @@ function SavingsPage({
 
     const handleOptionClick = (optionId) => {
         if (optionId === 'saving') {
-            // Abrir el modal de ahorro unificado
             setShowSavingModal(true);
         } else {
             setActiveView(optionId);
@@ -115,20 +105,20 @@ function SavingsPage({
                 </div>
             )}
 
-            {/* Vista: Inversiones */}
+            {/* Vista: Inversiones - RESPONSIVE */}
             <BottomSheet
                 isOpen={activeView === 'investments'}
                 onClose={handleBack}
                 title="Registrar Inversión"
                 icon={TrendingUp}
             >
-                <div className="space-y-4">
+                <div className="space-y-3">
                     <input
                         type="text"
                         value={investmentDescription}
                         onChange={(e) => setInvestmentDescription(e.target.value)}
                         placeholder="Ej: CDT Bancolombia"
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     />
 
                     <input
@@ -136,13 +126,13 @@ function SavingsPage({
                         value={investmentAmount}
                         onChange={(e) => setInvestmentAmount(e.target.value)}
                         placeholder="Monto"
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     />
 
                     <select
                         value={investmentSource}
                         onChange={(e) => setInvestmentSource(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     >
                         <option value="disponible" className="bg-gray-800">💵 Dinero Disponible</option>
                         <option value="emergencia" className="bg-gray-800">🚨 Ahorro Emergencia</option>
@@ -150,7 +140,7 @@ function SavingsPage({
                         <option value="ambos" className="bg-gray-800">🔄 Ambos (50/50)</option>
                     </select>
 
-                    <div className="bg-white/10 rounded-xl p-4 space-y-2 text-sm">
+                    <div className="bg-white/10 rounded-xl p-3 space-y-1 text-xs md:text-sm">
                         <p className="text-white/70 font-semibold">Fondos disponibles:</p>
                         <p className="text-white">💵 Disponible: {formatCurrency(remaining)}</p>
                         <p className="text-white">🚨 Emergencia: {formatCurrency(getCategoryTotal('emergencia') + totalExternalSavings)}</p>
@@ -160,7 +150,7 @@ function SavingsPage({
                         type="date"
                         value={investmentDate}
                         onChange={(e) => setInvestmentDate(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2.5 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     />
 
                     <button
@@ -168,41 +158,41 @@ function SavingsPage({
                             addInvestment();
                             handleBack();
                         }}
-                        className="w-full bg-white text-purple-600 py-4 rounded-xl font-bold text-lg hover:bg-white/90 transition-all shadow-lg"
+                        className="w-full bg-white text-purple-600 py-3 rounded-xl font-bold text-base hover:bg-white/90 transition-all shadow-lg"
                     >
                         💎 Registrar Inversión
                     </button>
                 </div>
             </BottomSheet>
 
-            {/* Vista: Ver Todo */}
+            {/* Vista: Ver Todo - RESPONSIVE */}
             <BottomSheet
                 isOpen={activeView === 'list'}
                 onClose={handleBack}
                 title="Ahorros e Inversiones"
                 icon={Eye}
             >
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {/* Ahorros Externos */}
                     <div>
-                        <h3 className="text-white font-bold mb-3 text-lg">💰 Ahorros Externos</h3>
+                        <h3 className="text-white font-bold mb-3 text-base md:text-lg">💰 Ahorros Externos</h3>
                         <div className="space-y-2">
                             {filteredExternalSavings.length === 0 ? (
-                                <p className="text-white/60 text-center py-4">No hay ahorros externos</p>
+                                <p className="text-white/60 text-center py-4 text-sm">No hay ahorros externos</p>
                             ) : (
                                 filteredExternalSavings
                                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                                     .map((saving) => (
-                                        <div key={saving.id} className="bg-white/10 p-4 rounded-xl flex justify-between items-center">
-                                            <div>
-                                                <p className="text-white font-semibold">{saving.description}</p>
-                                                <p className="text-white/60 text-sm">{new Date(saving.date).toLocaleDateString('es')}</p>
+                                        <div key={saving.id} className="bg-white/10 p-3 rounded-xl flex justify-between items-center gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-white font-semibold text-sm truncate">{saving.description}</p>
+                                                <p className="text-white/60 text-xs">{new Date(saving.date).toLocaleDateString('es')}</p>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <p className="text-white font-bold">{formatCurrency(saving.amount)}</p>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <p className="text-white font-bold text-sm">{formatCurrency(saving.amount)}</p>
                                                 <button
                                                     onClick={() => deleteExternalSaving(saving.id)}
-                                                    className="text-red-400 hover:text-red-300"
+                                                    className="text-red-400 hover:text-red-300 p-1"
                                                 >
                                                     ✕
                                                 </button>
@@ -215,24 +205,24 @@ function SavingsPage({
 
                     {/* Inversiones */}
                     <div>
-                        <h3 className="text-white font-bold mb-3 text-lg">💎 Inversiones</h3>
+                        <h3 className="text-white font-bold mb-3 text-base md:text-lg">💎 Inversiones</h3>
                         <div className="space-y-2">
                             {filteredInvestments.length === 0 ? (
-                                <p className="text-white/60 text-center py-4">No hay inversiones</p>
+                                <p className="text-white/60 text-center py-4 text-sm">No hay inversiones</p>
                             ) : (
                                 filteredInvestments
                                     .sort((a, b) => new Date(b.date) - new Date(a.date))
                                     .map((investment) => (
-                                        <div key={investment.id} className="bg-white/10 p-4 rounded-xl flex justify-between items-center">
-                                            <div>
-                                                <p className="text-white font-semibold">{investment.description}</p>
-                                                <p className="text-white/60 text-sm">{new Date(investment.date).toLocaleDateString('es')}</p>
+                                        <div key={investment.id} className="bg-white/10 p-3 rounded-xl flex justify-between items-center gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-white font-semibold text-sm truncate">{investment.description}</p>
+                                                <p className="text-white/60 text-xs">{new Date(investment.date).toLocaleDateString('es')}</p>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <p className="text-white font-bold">{formatCurrency(investment.amount)}</p>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <p className="text-white font-bold text-sm">{formatCurrency(investment.amount)}</p>
                                                 <button
                                                     onClick={() => deleteInvestment(investment.id)}
-                                                    className="text-red-400 hover:text-red-300"
+                                                    className="text-red-400 hover:text-red-300 p-1"
                                                 >
                                                     ✕
                                                 </button>

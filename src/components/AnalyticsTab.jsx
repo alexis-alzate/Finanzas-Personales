@@ -190,135 +190,134 @@ const AnalyticsTab = ({
 
     return (
         <div className="space-y-6 animate-fadeIn">
-            {/* Botón desplegable estilo Deudas */}
+            {/* Botón desplegable RESPONSIVE */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-2xl p-6 shadow-xl transition-all hover:scale-102 flex items-center justify-between"
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-2xl p-4 md:p-6 shadow-xl transition-all hover:scale-102 flex items-center justify-between"
             >
-                <div className="flex items-center gap-4">
-                    <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm animate-pulse">
-                        <BarChart3 className="w-8 h-8 text-white" />
+                <div className="flex items-center gap-3 md:gap-4">
+                    <div className="bg-white/20 p-2 md:p-3 rounded-xl backdrop-blur-sm animate-pulse">
+                        <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-white" />
                     </div>
                     <div className="text-left">
-                        <h2 className="text-3xl font-black">📊 Análisis Avanzado</h2>
-                        <p className="text-white/80 text-sm font-semibold mt-1">
-                            {isExpanded ? 'Ocultar análisis detallado' : 'Ver insights profesionales de tus finanzas'}
+                        <h2 className="text-xl md:text-3xl font-black">📊 Análisis Avanzado</h2>
+                        <p className="text-white/80 text-xs md:text-sm font-semibold mt-1 hidden sm:block">
+                            {isExpanded ? 'Ocultar análisis detallado' : 'Ver insights profesionales'}
                         </p>
                     </div>
                 </div>
-                <div className="bg-white/20 p-3 rounded-xl">
+                <div className="bg-white/20 p-2 md:p-3 rounded-xl">
                     {isExpanded ? (
-                        <ChevronUp className="w-8 h-8 text-white" />
+                        <ChevronUp className="w-6 h-6 md:w-8 md:h-8 text-white" />
                     ) : (
-                        <ChevronDown className="w-8 h-8 text-white" />
+                        <ChevronDown className="w-6 h-6 md:w-8 md:h-8 text-white" />
                     )}
                 </div>
             </button>
 
             {/* Contenido desplegable */}
             {isExpanded && (
-                <div className="space-y-8 animate-fadeIn">
-                    {/* Métricas Rápidas */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 shadow-xl hover:scale-105 transition-all transform hover:shadow-green-500/50">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm animate-pulse">
-                                    <TrendingUp className="w-8 h-8 text-white" />
+                <div className="space-y-6 md:space-y-8 animate-fadeIn">
+                    {/* Métricas Rápidas RESPONSIVE */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl hover:scale-105 transition-all">
+                            <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                                <div className="bg-white/20 p-2 md:p-3 rounded-lg md:rounded-xl backdrop-blur-sm animate-pulse">
+                                    <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-white" />
                                 </div>
-                                <h3 className="text-white font-black text-base">Tasa de Ahorro</h3>
+                                <h3 className="text-white font-black text-sm md:text-base">Tasa de Ahorro</h3>
                             </div>
-                            <p className="text-5xl font-black text-white drop-shadow-xl mb-1">{savingsRate.toFixed(1)}%</p>
-                            <p className="text-white/90 text-sm font-bold">Del ingreso mensual</p>
+                            <p className="text-3xl md:text-5xl font-black text-white drop-shadow-xl mb-1">{savingsRate.toFixed(1)}%</p>
+                            <p className="text-white/90 text-xs md:text-sm font-bold">Del ingreso mensual</p>
                         </div>
 
-                        <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl p-6 shadow-xl hover:scale-105 transition-all transform hover:shadow-blue-500/50">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm animate-pulse">
-                                    <BarChart3 className="w-8 h-8 text-white" />
+                        <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl hover:scale-105 transition-all">
+                            <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                                <div className="bg-white/20 p-2 md:p-3 rounded-lg md:rounded-xl backdrop-blur-sm animate-pulse">
+                                    <BarChart3 className="w-6 h-6 md:w-8 md:h-8 text-white" />
                                 </div>
-                                <h3 className="text-white font-black text-base">Total Gastado</h3>
+                                <h3 className="text-white font-black text-sm md:text-base">Total Gastado</h3>
                             </div>
-                            <p className="text-3xl font-black text-white drop-shadow-xl mb-1">
+                            <p className="text-2xl md:text-3xl font-black text-white drop-shadow-xl mb-1">
                                 {formatCurrency(allExpenses.reduce((sum, exp) => sum + exp.amount, 0))}
                             </p>
-                            <p className="text-white/90 text-sm font-bold">Histórico total</p>
+                            <p className="text-white/90 text-xs md:text-sm font-bold">Histórico total</p>
                         </div>
 
-                        <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 shadow-xl hover:scale-105 transition-all transform hover:shadow-purple-500/50">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm animate-pulse">
-                                    <DollarSign className="w-8 h-8 text-white" />
+                        <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-xl hover:scale-105 transition-all sm:col-span-2 lg:col-span-1">
+                            <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                                <div className="bg-white/20 p-2 md:p-3 rounded-lg md:rounded-xl backdrop-blur-sm animate-pulse">
+                                    <DollarSign className="w-6 h-6 md:w-8 md:h-8 text-white" />
                                 </div>
-                                <h3 className="text-white font-black text-base">Total Ahorrado</h3>
+                                <h3 className="text-white font-black text-sm md:text-base">Total Ahorrado</h3>
                             </div>
-                            <p className="text-3xl font-black text-white drop-shadow-xl mb-1">
+                            <p className="text-2xl md:text-3xl font-black text-white drop-shadow-xl mb-1">
                                 {formatCurrency(allSavings.reduce((sum, sav) => sum + sav.amount, 0))}
                             </p>
-                            <p className="text-white/90 text-sm font-bold">Histórico total</p>
+                            <p className="text-white/90 text-xs md:text-sm font-bold">Histórico total</p>
                         </div>
                     </div>
 
-                    {/* Gráfica de Tendencias */}
+                    {/* Gráfica de Tendencias RESPONSIVE */}
                     {monthlyTrends.length > 0 && (
-                        <div className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
-                            <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                                <div className="bg-gradient-to-br from-blue-500 to-purple-500 p-2 rounded-xl animate-pulse">
-                                    <TrendingUp className="w-6 h-6 text-white" />
+                        <div className="bg-gradient-to-br from-indigo-900/50 to-purple-900/50 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20 shadow-xl">
+                            <h3 className="text-lg md:text-xl font-black text-white mb-4 md:mb-6 flex items-center gap-2">
+                                <div className="bg-gradient-to-br from-blue-500 to-purple-500 p-2 rounded-lg md:rounded-xl animate-pulse">
+                                    <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
-                                Tendencias de los Últimos 6 Meses
+                                <span className="text-sm md:text-xl">Tendencias (6 Meses)</span>
                             </h3>
-                            <ResponsiveContainer width="100%" height={300}>
+                            <ResponsiveContainer width="100%" height={250}>
                                 <LineChart data={monthlyTrends}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff30" />
                                     <XAxis
                                         dataKey="mes"
                                         stroke="#ffffff"
-                                        style={{ fontSize: '12px', fontWeight: 'bold' }}
+                                        style={{ fontSize: '10px', fontWeight: 'bold' }}
                                         tick={{ fill: '#ffffff' }}
                                     />
                                     <YAxis
                                         stroke="#ffffff"
-                                        style={{ fontSize: '12px', fontWeight: 'bold' }}
+                                        style={{ fontSize: '10px', fontWeight: 'bold' }}
                                         tick={{ fill: '#ffffff' }}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Legend wrapperStyle={{ fontSize: '14px', fontWeight: 'bold' }} />
-                                    <Line type="monotone" dataKey="Ingresos" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
-                                    <Line type="monotone" dataKey="Gastos" stroke="#ef4444" strokeWidth={3} dot={{ r: 5, fill: '#ef4444', strokeWidth: 2, stroke: '#fff' }} />
-                                    <Line type="monotone" dataKey="Ahorros" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} />
+                                    <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
+                                    <Line type="monotone" dataKey="Ingresos" stroke="#10b981" strokeWidth={2} dot={{ r: 4 }} />
+                                    <Line type="monotone" dataKey="Gastos" stroke="#ef4444" strokeWidth={2} dot={{ r: 4 }} />
+                                    <Line type="monotone" dataKey="Ahorros" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
                     )}
 
-                    {/* Distribución por Categorías */}
+                    {/* Distribución por Categorías RESPONSIVE */}
                     {categoryDistribution.length > 0 && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Torta 3D */}
-                            <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
-                                <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                                    <div className="bg-gradient-to-br from-pink-500 to-purple-500 p-2 rounded-xl animate-pulse">
-                                        <Award className="w-6 h-6 text-white" />
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                            {/* Torta 3D RESPONSIVE */}
+                            <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20 shadow-xl">
+                                <h3 className="text-lg md:text-xl font-black text-white mb-4 md:mb-6 flex items-center gap-2">
+                                    <div className="bg-gradient-to-br from-pink-500 to-purple-500 p-2 rounded-lg md:rounded-xl animate-pulse">
+                                        <Award className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                     </div>
-                                    Distribución por Categorías
+                                    <span className="text-sm md:text-xl">Distribución</span>
                                 </h3>
-                                <ResponsiveContainer width="100%" height={350}>
+                                <ResponsiveContainer width="100%" height={300}>
                                     <PieChart>
                                         <Pie
                                             data={categoryDistribution}
                                             cx="50%"
                                             cy="50%"
-                                            labelLine={true}
-                                            label={renderCustomizedLabel}
-                                            outerRadius={110}
-                                            innerRadius={65}
+                                            labelLine={false}
+                                            outerRadius={90}
+                                            innerRadius={50}
                                             fill="#8884d8"
                                             dataKey="value"
                                             paddingAngle={4}
                                             onMouseEnter={onPieEnter}
                                             activeIndex={activeIndex}
                                             activeShape={{
-                                                outerRadius: 120,
+                                                outerRadius: 100,
                                                 stroke: '#fff',
                                                 strokeWidth: 2
                                             }}
@@ -331,19 +330,20 @@ const AnalyticsTab = ({
                                             ))}
                                         </Pie>
                                         <Tooltip content={<CustomPieTooltip />} />
+                                        <Legend wrapperStyle={{ fontSize: '11px' }} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
 
-                            {/* Barras */}
-                            <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
-                                <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-500 p-2 rounded-xl animate-pulse">
-                                        <BarChart3 className="w-6 h-6 text-white" />
+                            {/* Barras RESPONSIVE */}
+                            <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20 shadow-xl">
+                                <h3 className="text-lg md:text-xl font-black text-white mb-4 md:mb-6 flex items-center gap-2">
+                                    <div className="bg-gradient-to-br from-blue-500 to-indigo-500 p-2 rounded-lg md:rounded-xl animate-pulse">
+                                        <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                     </div>
-                                    Top Categorías
+                                    <span className="text-sm md:text-xl">Top Categorías</span>
                                 </h3>
-                                <ResponsiveContainer width="100%" height={350}>
+                                <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={categoryDistribution.slice(0, 6)}>
                                         <defs>
                                             <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -355,15 +355,15 @@ const AnalyticsTab = ({
                                         <XAxis
                                             dataKey="name"
                                             stroke="#ffffff"
-                                            angle={-15}
+                                            angle={-30}
                                             textAnchor="end"
                                             height={80}
-                                            style={{ fontSize: '11px', fontWeight: 'bold' }}
+                                            style={{ fontSize: '9px', fontWeight: 'bold' }}
                                             tick={{ fill: '#ffffff' }}
                                         />
                                         <YAxis
                                             stroke="#ffffff"
-                                            style={{ fontSize: '12px', fontWeight: 'bold' }}
+                                            style={{ fontSize: '10px', fontWeight: 'bold' }}
                                             tick={{ fill: '#ffffff' }}
                                         />
                                         <Tooltip content={<CustomTooltip />} />
@@ -371,7 +371,7 @@ const AnalyticsTab = ({
                                             dataKey="value"
                                             fill="url(#barGradient)"
                                             radius={[8, 8, 0, 0]}
-                                            maxBarSize={60}
+                                            maxBarSize={50}
                                         />
                                     </BarChart>
                                 </ResponsiveContainer>
@@ -379,33 +379,33 @@ const AnalyticsTab = ({
                         </div>
                     )}
 
-                    {/* Top 10 Gastos */}
+                    {/* Top 10 Gastos RESPONSIVE */}
                     {topExpenses.length > 0 && (
-                        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur-xl rounded-2xl p-6 border border-orange-500/30 shadow-xl">
-                            <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                                <div className="bg-gradient-to-br from-orange-500 to-red-500 p-2 rounded-xl animate-pulse">
-                                    <Flame className="w-6 h-6 text-white" />
+                        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 border border-orange-500/30 shadow-xl">
+                            <h3 className="text-lg md:text-xl font-black text-white mb-4 md:mb-6 flex items-center gap-2">
+                                <div className="bg-gradient-to-br from-orange-500 to-red-500 p-2 rounded-lg md:rounded-xl animate-pulse">
+                                    <Flame className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
-                                🔥 Top 10 Gastos Más Grandes
+                                <span className="text-sm md:text-xl">🔥 Top 10 Gastos</span>
                             </h3>
-                            <div className="space-y-3">
+                            <div className="space-y-2 md:space-y-3">
                                 {topExpenses.map((expense, index) => {
                                     const cat = categories.find(c => c.value === expense.category);
                                     return (
-                                        <div key={expense.id} className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-xl p-4 flex items-center justify-between border border-orange-500/30 hover:scale-102 transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="relative">
+                                        <div key={expense.id} className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg md:rounded-xl p-3 md:p-4 flex items-center justify-between border border-orange-500/30 hover:scale-102 transition-all">
+                                            <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                                                <div className="relative flex-shrink-0">
                                                     <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 rounded-full blur-md opacity-40"></div>
-                                                    <div className="relative bg-gradient-to-br from-orange-500 to-red-500 w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-2 border-white/30">
-                                                        <span className="text-white font-black text-base">#{index + 1}</span>
+                                                    <div className="relative bg-gradient-to-br from-orange-500 to-red-500 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-lg border-2 border-white/30">
+                                                        <span className="text-white font-black text-sm md:text-base">#{index + 1}</span>
                                                     </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-white font-bold text-base">{expense.description}</p>
-                                                    <p className="text-orange-200 text-sm">{cat?.label || 'Sin categoría'} • {new Date(expense.date).toLocaleDateString('es')}</p>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-white font-bold text-sm md:text-base truncate">{expense.description}</p>
+                                                    <p className="text-orange-200 text-xs md:text-sm truncate">{cat?.label || 'Sin categoría'}</p>
                                                 </div>
                                             </div>
-                                            <p className="text-2xl font-black text-white drop-shadow-lg">{formatCurrency(expense.amount)}</p>
+                                            <p className="text-lg md:text-2xl font-black text-white drop-shadow-lg ml-2 flex-shrink-0">{formatCurrency(expense.amount)}</p>
                                         </div>
                                     );
                                 })}

@@ -137,9 +137,8 @@ const TransactionsTab = ({
                                             </p>
                                         </div>
                                         <button
-                                            onClick={() => deleteSalaryIncome(salary.id)}
-                                            className="text-red-400 hover:text-red-300 transition-colors text-xl"
-                                            title="Eliminar salario"
+                                            onClick={() => deleteExpense(expense.id)}
+                                            className="text-red-400 hover:text-red-300 transition-colors text-base md:text-xl flex-shrink-0 p-1"
                                         >
                                             ✕
                                         </button>
@@ -179,8 +178,8 @@ const TransactionsTab = ({
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="text-white font-semibold">{income.description}</p>
                                         <button
-                                            onClick={() => deleteExtraIncome(income.id)}
-                                            className="text-red-400 hover:text-red-300 transition-colors"
+                                            onClick={() => deleteExpense(expense.id)}
+                                            className="text-red-400 hover:text-red-300 transition-colors text-base md:text-xl flex-shrink-0 p-1"
                                         >
                                             ✕
                                         </button>
@@ -225,8 +224,8 @@ const TransactionsTab = ({
                                                 </div>
                                             </div>
                                             <button
-                                                onClick={() => deleteSaving && deleteSaving(saving.id)}
-                                                className="text-red-400 hover:text-red-300 transition-colors"
+                                                onClick={() => deleteExpense(expense.id)}
+                                                className="text-red-400 hover:text-red-300 transition-colors text-base md:text-xl flex-shrink-0 p-1"
                                             >
                                                 ✕
                                             </button>
@@ -267,8 +266,8 @@ const TransactionsTab = ({
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="text-white font-semibold">{investment.description}</p>
                                         <button
-                                            onClick={() => deleteInvestment(investment.id)}
-                                            className="text-red-400 hover:text-red-300 transition-colors"
+                                            onClick={() => deleteExpense(expense.id)}
+                                            className="text-red-400 hover:text-red-300 transition-colors text-base md:text-xl flex-shrink-0 p-1"
                                         >
                                             ✕
                                         </button>
@@ -315,9 +314,10 @@ const TransactionsTab = ({
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <p className="text-xl font-bold text-green-600">{formatCurrency(saving.amount)}</p>
+
                                         <button
-                                            onClick={() => deleteExternalSaving(saving.id)}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-100 p-2 rounded-lg transition-all"
+                                            onClick={() => deleteExpense(expense.id)}
+                                            className="text-red-400 hover:text-red-300 transition-colors text-base md:text-xl flex-shrink-0 p-1"
                                         >
                                             ✕
                                         </button>
@@ -354,9 +354,10 @@ const TransactionsTab = ({
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <p className="text-xl font-bold text-white">{formatCurrency(expense.amount)}</p>
+
                                                 <button
                                                     onClick={() => deleteExpense(expense.id)}
-                                                    className="text-red-400 hover:text-red-300 transition-colors"
+                                                    className="text-red-400 hover:text-red-300 transition-colors text-base md:text-xl flex-shrink-0 p-1"
                                                 >
                                                     ✕
                                                 </button>

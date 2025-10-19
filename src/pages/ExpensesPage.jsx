@@ -104,13 +104,13 @@ function ExpensesPage({
                 title="Agregar Gasto"
                 icon={PlusCircle}
             >
-                <div className="space-y-4">
+                <div className="space-y-2.5">
                     <input
                         type="text"
                         placeholder="Descripción del gasto"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2 rounded-lg bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     />
 
                     <input
@@ -118,13 +118,13 @@ function ExpensesPage({
                         placeholder="Monto"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2 rounded-lg bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     />
 
                     <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     >
                         {categories.map((cat) => (
                             <option key={cat.value} value={cat.value} className="bg-indigo-900">
@@ -137,7 +137,7 @@ function ExpensesPage({
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-3 py-2 rounded-lg bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
                     />
 
                     <button
@@ -145,13 +145,12 @@ function ExpensesPage({
                             addExpense();
                             handleBack();
                         }}
-                        className="w-full bg-white text-indigo-600 py-4 rounded-xl font-bold text-lg hover:bg-white/90 transition-all shadow-lg"
+                        className="w-full bg-white text-indigo-600 py-2.5 rounded-lg font-bold text-sm hover:bg-white/90 transition-all shadow-lg"
                     >
                         💸 Agregar Gasto
                     </button>
                 </div>
             </BottomSheet>
-
             {/* Vista: Contenido (con tabs) */}
             {activeView === 'content' && (
                 <div className="mt-6">
@@ -163,46 +162,46 @@ function ExpensesPage({
                     </button>
 
                     {/* Tabs */}
-                    <div className="flex gap-2 mb-6 bg-white/10 backdrop-blur-md rounded-2xl p-2">
+                    <div className="flex gap-1 md:gap-2 mb-4 md:mb-6 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-1.5 md:p-2">
                         <button
                             onClick={() => setActiveTab('list')}
-                            className={`flex-1 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'list'
-                                    ? 'bg-blue-500 text-white shadow-lg'
-                                    : 'text-white/70 hover:bg-white/10'
+                            className={`flex-1 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm ${activeTab === 'list'
+                                ? 'bg-blue-500 text-white shadow-lg'
+                                : 'text-white/70 hover:bg-white/10'
                                 }`}
                         >
-                            <Eye className="w-5 h-5" />
-                            Ver Lista
+                            <Eye className="w-4 h-4 md:w-5 md:h-5" />
+                            <span className="hidden sm:inline">Ver Lista</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('budgets')}
-                            className={`flex-1 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'budgets'
-                                    ? 'bg-purple-500 text-white shadow-lg'
-                                    : 'text-white/70 hover:bg-white/10'
+                            className={`flex-1 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm ${activeTab === 'budgets'
+                                ? 'bg-purple-500 text-white shadow-lg'
+                                : 'text-white/70 hover:bg-white/10'
                                 }`}
                         >
-                            <PieChart className="w-5 h-5" />
-                            Presupuestos
+                            <PieChart className="w-4 h-4 md:w-5 md:h-5" />
+                            <span className="hidden sm:inline">Presupuestos</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('stats')}
-                            className={`flex-1 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'stats'
-                                    ? 'bg-orange-500 text-white shadow-lg'
-                                    : 'text-white/70 hover:bg-white/10'
+                            className={`flex-1 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all flex items-center justify-center gap-1 md:gap-2 text-xs md:text-sm ${activeTab === 'stats'
+                                ? 'bg-orange-500 text-white shadow-lg'
+                                : 'text-white/70 hover:bg-white/10'
                                 }`}
                         >
-                            <TrendingUp className="w-5 h-5" />
-                            Estadísticas
+                            <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
+                            <span className="hidden sm:inline">Estadísticas</span>
                         </button>
                     </div>
 
                     {/* Contenido de tabs */}
                     {activeTab === 'list' && (
-                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
-                            <h3 className="text-xl font-bold text-white mb-4">Gastos Recientes</h3>
-                            <div className="space-y-3">
+                        <div className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6">
+                            <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4">Gastos Recientes</h3>
+                            <div className="space-y-2 md:space-y-3">
                                 {filteredExpenses.length === 0 ? (
-                                    <p className="text-white/60 text-center py-8">No hay gastos registrados este mes</p>
+                                    <p className="text-white/60 text-center py-8 text-sm md:text-base">No hay gastos registrados este mes</p>
                                 ) : (
                                     filteredExpenses
                                         .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -211,18 +210,18 @@ function ExpensesPage({
                                             return (
                                                 <div
                                                     key={expense.id}
-                                                    className="bg-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/20 transition-all"
+                                                    className="bg-white/10 p-3 md:p-4 rounded-lg md:rounded-xl flex items-center justify-between hover:bg-white/20 transition-all gap-2"
                                                 >
-                                                    <div className="flex-1">
-                                                        <p className="text-white font-semibold">{expense.description}</p>
-                                                        <p className="text-white/60 text-sm">{cat?.label || expense.category}</p>
-                                                        <p className="text-white/40 text-xs">{new Date(expense.date).toLocaleDateString('es')}</p>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-white font-semibold text-sm md:text-base truncate">{expense.description}</p>
+                                                        <p className="text-white/60 text-xs md:text-sm truncate">{cat?.label || expense.category}</p>
+                                                        <p className="text-white/40 text-[10px] md:text-xs">{new Date(expense.date).toLocaleDateString('es')}</p>
                                                     </div>
-                                                    <div className="text-right flex items-center gap-3">
-                                                        <p className="text-white font-bold">{formatCurrency(expense.amount)}</p>
+                                                    <div className="text-right flex items-center gap-2 md:gap-3 flex-shrink-0">
+                                                        <p className="text-white font-bold text-sm md:text-base">{formatCurrency(expense.amount)}</p>
                                                         <button
                                                             onClick={() => deleteExpense(expense.id)}
-                                                            className="text-red-400 hover:text-red-300"
+                                                            className="text-red-400 hover:text-red-300 p-1"
                                                         >
                                                             ✕
                                                         </button>
@@ -236,30 +235,30 @@ function ExpensesPage({
                     )}
 
                     {activeTab === 'budgets' && (
-                        <div className="space-y-4">
+                        <div className="space-y-3 md:space-y-4">
                             {categoryData.map((cat) => (
-                                <div key={cat.value} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-3">
-                                            {cat.icon && <cat.icon className="w-6 h-6 text-white" />}
-                                            <span className="text-white font-semibold text-lg">{cat.label}</span>
+                                <div key={cat.value} className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-5 border border-white/20">
+                                    <div className="flex items-center justify-between mb-2 md:mb-3 gap-2">
+                                        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                                            {cat.icon && <cat.icon className="w-5 h-5 md:w-6 md:h-6 text-white flex-shrink-0" />}
+                                            <span className="text-white font-semibold text-sm md:text-base lg:text-lg truncate">{cat.label}</span>
                                         </div>
-                                        <span className="text-white text-xl font-bold">{formatCurrency(cat.spent)}</span>
+                                        <span className="text-white text-base md:text-lg lg:text-xl font-bold flex-shrink-0">{formatCurrency(cat.spent)}</span>
                                     </div>
                                     {cat.limit && (
                                         <>
-                                            <div className="w-full bg-white/20 rounded-full h-3 mb-2">
+                                            <div className="w-full bg-white/20 rounded-full h-2 md:h-3 mb-2">
                                                 <div
-                                                    className={`h-3 rounded-full transition-all ${cat.isOverLimit ? 'bg-red-500' : cat.isNearLimit ? 'bg-yellow-500' : 'bg-green-500'
+                                                    className={`h-2 md:h-3 rounded-full transition-all ${cat.isOverLimit ? 'bg-red-500' : cat.isNearLimit ? 'bg-yellow-500' : 'bg-green-500'
                                                         }`}
                                                     style={{ width: `${Math.min(cat.percentage, 100)}%` }}
                                                 />
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <p className="text-white/70 text-sm">
+                                            <div className="flex justify-between items-center gap-2">
+                                                <p className="text-white/70 text-xs md:text-sm">
                                                     {cat.percentage.toFixed(0)}% usado
                                                 </p>
-                                                <p className="text-white/60 text-sm">
+                                                <p className="text-white/60 text-xs md:text-sm text-right">
                                                     {cat.limitType === 'quincenal' ? `Quincena ${cat.quincenaActual}` : 'Mensual'}: {formatCurrency(cat.limit)}
                                                 </p>
                                             </div>
