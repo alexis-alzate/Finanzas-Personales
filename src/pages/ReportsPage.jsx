@@ -9,16 +9,19 @@ function ReportsPage({
     filteredInvestments,
     filteredExtraIncomes,
     filteredSalaryIncomes,
+    filteredSavings, // ← AGREGAR
     allExpenses,
     allExternalSavings,
     allInvestments,
     allExtraIncomes,
     allSalaryIncomes,
+    allSavings, // ← AGREGAR
     deleteExpense,
     deleteExternalSaving,
     deleteInvestment,
     deleteExtraIncome,
     deleteSalaryIncome,
+    deleteSaving, // ← AGREGAR
     categories,
     formatCurrency,
     months,
@@ -34,7 +37,6 @@ function ReportsPage({
                 Reportes y Análisis
             </h1>
 
-            {/* Historial de Transacciones */}
             <div className="mb-8">
                 <TransactionsTab
                     filteredExpenses={filteredExpenses}
@@ -42,16 +44,19 @@ function ReportsPage({
                     filteredInvestments={filteredInvestments}
                     filteredExtraIncomes={filteredExtraIncomes}
                     filteredSalaryIncomes={filteredSalaryIncomes}
+                    filteredSavings={filteredSavings} // ← AGREGAR
                     allExpenses={allExpenses}
                     allExternalSavings={allExternalSavings}
                     allInvestments={allInvestments}
                     allExtraIncomes={allExtraIncomes}
                     allSalaryIncomes={allSalaryIncomes}
+                    allSavings={allSavings} // ← AGREGAR
                     deleteExpense={deleteExpense}
                     deleteExternalSaving={deleteExternalSaving}
                     deleteInvestment={deleteInvestment}
                     deleteExtraIncome={deleteExtraIncome}
                     deleteSalaryIncome={deleteSalaryIncome}
+                    deleteSaving={deleteSaving} // ← AGREGAR
                     categories={categories}
                     formatCurrency={formatCurrency}
                     months={months}
@@ -62,9 +67,19 @@ function ReportsPage({
                 />
             </div>
 
-            {/* Analytics */}
             <div>
-                <AnalyticsTab />
+                <AnalyticsTab
+                    allExpenses={allExpenses}
+                    allSavings={allSavings}
+                    allSalaryIncomes={allSalaryIncomes}
+                    allExtraIncomes={allExtraIncomes}
+                    formatCurrency={formatCurrency}
+                    categories={categories}
+                    months={months}
+
+
+                />
+
             </div>
         </div>
     );

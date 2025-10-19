@@ -79,7 +79,7 @@ function DebtsPage({
         .reduce((sum, d) => sum + d.monthlyPayment, 0);
 
     return (
-        <div className="pb-24 px-4">
+        <div className="pb-32 px-4">
             {/* Menú principal */}
             {showMenu && (
                 <div className="space-y-4 mt-6">

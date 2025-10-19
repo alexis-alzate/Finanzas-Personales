@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wallet, TrendingDown, TrendingUp, Target, Edit, Plus, Landmark, X } from 'lucide-react';
+import { Wallet, TrendingDown, TrendingUp, Target, Edit, Plus, Landmark, X, PiggyBank } from 'lucide-react';
 
 const SummaryCards = ({
     monthlyIncome,
@@ -15,10 +15,10 @@ const SummaryCards = ({
     setTempIncome,
     setTempGoal,
     setShowExtraIncomeModal,
+    setShowSavingModal, // ← NUEVO
     totalExtraIncome = 0,
     patrimonioTotal = 0
 }) => {
-    // Estado para controlar la visibilidad del modal de patrimonio
     const [showPatrimonioModal, setShowPatrimonioModal] = useState(false);
 
     return (
@@ -190,17 +190,27 @@ const SummaryCards = ({
                     </div>
                 </div>
 
-                {/* Tarjeta de Meta de Ahorro */}
+                {/* Tarjeta de Meta de Ahorro - CON BOTÓN NUEVO */}
                 <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl shadow-2xl p-4 md:p-6 text-white transform hover:scale-105 transition-transform relative">
-                    <button
-                        onClick={() => {
-                            setTempGoal(String(savingsGoal));
-                            setShowGoalModal(true);
-                        }}
-                        className="absolute top-3 right-3 md:top-4 md:right-4 bg-white/20 hover:bg-white/30 p-1.5 md:p-2 rounded-lg"
-                    >
-                        <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                    </button>
+                    <div className="absolute top-3 right-3 md:top-4 md:right-4 flex gap-2">
+                        <button
+                            onClick={() => setShowSavingModal(true)}
+                            className="bg-white/20 hover:bg-white/30 p-1.5 md:p-2 rounded-lg"
+                            title="Registrar Ahorro"
+                        >
+                            <PiggyBank className="w-3 h-3 md:w-4 md:h-4" />
+                        </button>
+                        <button
+                            onClick={() => {
+                                setTempGoal(String(savingsGoal));
+                                setShowGoalModal(true);
+                            }}
+                            className="bg-white/20 hover:bg-white/30 p-1.5 md:p-2 rounded-lg"
+                            title="Editar meta"
+                        >
+                            <Edit className="w-3 h-3 md:w-4 md:h-4" />
+                        </button>
+                    </div>
                     <div className="flex items-center justify-between mb-2">
                         <Target className="w-8 h-8 md:w-10 md:h-10" />
                         <span className="text-xs md:text-sm opacity-80">Meta de Ahorro</span>

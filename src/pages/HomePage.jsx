@@ -32,6 +32,7 @@ function HomePage({
     setTempIncome,
     setTempGoal,
     setShowExtraIncomeModal,
+    setShowSavingModal, // ← NUEVO
 
     // Props de alertas
     categoryData,
@@ -66,6 +67,7 @@ function HomePage({
                 setTempIncome={setTempIncome}
                 setTempGoal={setTempGoal}
                 setShowExtraIncomeModal={setShowExtraIncomeModal}
+                setShowSavingModal={setShowSavingModal} // ← NUEVO
                 totalExtraIncome={totalExtraIncome}
                 patrimonioTotal={patrimonioTotal}
             />
