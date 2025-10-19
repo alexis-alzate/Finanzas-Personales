@@ -8,6 +8,7 @@ const TransactionsTab = ({
     filteredInvestments,
     filteredExtraIncomes,
     filteredSalaryIncomes = [],
+    filteredSavings = [], // ← NUEVO: Sistema unificado
 
     // Datos completos (todos los meses)
     allExpenses = [],
@@ -15,6 +16,7 @@ const TransactionsTab = ({
     allInvestments = [],
     allExtraIncomes = [],
     allSalaryIncomes = [],
+    allSavings = [], // ← NUEVO: Sistema unificado
 
     // Funciones de eliminación
     deleteExpense,
@@ -22,6 +24,7 @@ const TransactionsTab = ({
     deleteInvestment,
     deleteExtraIncome,
     deleteSalaryIncome,
+    deleteSaving, // ← NUEVO
 
     // Datos generales
     categories,
@@ -40,6 +43,7 @@ const TransactionsTab = ({
     const investmentsToShow = showAllHistory ? allInvestments : filteredInvestments;
     const incomesToShow = showAllHistory ? allExtraIncomes : filteredExtraIncomes;
     const salariesToShow = showAllHistory ? allSalaryIncomes : filteredSalaryIncomes;
+    const unifiedSavingsToShow = showAllHistory ? allSavings : filteredSavings; // ← NUEVO
 
     // Función auxiliar para estilos de botones
     const getButtonClass = (mode) => (
@@ -48,6 +52,20 @@ const TransactionsTab = ({
             : 'bg-white/20 text-white hover:bg-white/30'
         }`
     );
+
+    // Función para obtener el icono y color según tipo de ahorro
+    const getSavingTypeInfo = (type) => {
+        switch (type) {
+            case 'interno':
+                return { icon: '💰', label: 'Ahorro Interno', color: 'text-blue-300' };
+            case 'externo':
+                return { icon: '🏦', label: 'Ahorro Externo', color: 'text-green-300' };
+            case 'emergencia':
+                return { icon: '🚨', label: 'Ahorro Emergencia', color: 'text-red-300' };
+            default:
+                return { icon: '💵', label: 'Ahorro', color: 'text-white' };
+        }
+    };
 
     return (
         <div className="space-y-6 animate-fadeIn">
@@ -185,6 +203,55 @@ const TransactionsTab = ({
                 </div>
             )}
 
+            {/* NUEVO: Ahorros Sistema Unificado */}
+            {(viewMode === 'all' || viewMode === 'savings') && unifiedSavingsToShow && unifiedSavingsToShow.length > 0 && (
+                <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md rounded-2xl p-6 border border-cyan-500/30">
+                    <h3 className="text-xl font-bold text-white mb-4">
+                        💎 Ahorros Registrados {showAllHistory ? '(Todos los meses)' : `- ${months[selectedMonth]} ${selectedYear}`}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {unifiedSavingsToShow
+                            .sort((a, b) => new Date(b.date) - new Date(a.date))
+                            .map((saving) => {
+                                const typeInfo = getSavingTypeInfo(saving.type);
+                                return (
+                                    <div key={saving.id} className="bg-white/10 rounded-xl p-4 border-2 border-cyan-400/30">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl">{typeInfo.icon}</span>
+                                                <div>
+                                                    <p className="text-white font-semibold">{saving.description}</p>
+                                                    <p className="text-xs text-cyan-200">{typeInfo.label}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => deleteSaving && deleteSaving(saving.id)}
+                                                className="text-red-400 hover:text-red-300 transition-colors"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                        <p className={`text-2xl font-bold ${typeInfo.color}`}>{formatCurrency(saving.amount)}</p>
+                                        <p className="text-white/50 text-xs mt-2">
+                                            📅 {new Date(saving.date).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                    {!showAllHistory && unifiedSavingsToShow.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-cyan-500/30">
+                            <p className="text-white text-lg">
+                                <span className="text-white/70">Total ahorrado este mes: </span>
+                                <span className="font-bold text-cyan-300">
+                                    {formatCurrency(unifiedSavingsToShow.reduce((sum, s) => sum + s.amount, 0))}
+                                </span>
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Inversiones */}
             {(viewMode === 'all' || viewMode === 'investments') && investmentsToShow && investmentsToShow.length > 0 && (
                 <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-md rounded-2xl p-6 border border-purple-500/30">
@@ -227,12 +294,12 @@ const TransactionsTab = ({
                 </div>
             )}
 
-            {/* Ahorros Externos */}
+            {/* Ahorros Externos (Sistema viejo) */}
             {(viewMode === 'all' || viewMode === 'savings') && savingsToShow && savingsToShow.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-2xl p-8 border-2 border-green-200">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-gray-800">
-                            💰 Ahorros Externos {showAllHistory ? '(Todos los meses)' : `- ${months[selectedMonth]} ${selectedYear}`}
+                            💰 Ahorros Externos (Sistema anterior) {showAllHistory ? '(Todos los meses)' : `- ${months[selectedMonth]} ${selectedYear}`}
                         </h2>
                     </div>
                     <div className="space-y-2">
@@ -271,16 +338,16 @@ const TransactionsTab = ({
                         {expensesToShow
                             .sort((a, b) => new Date(b.date) - new Date(a.date))
                             .map((expense) => {
-                                const category = categories.find(cat => cat.id === expense.category);
+                                const category = categories.find(cat => cat.value === expense.category);
                                 return (
                                     <div key={expense.id} className="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all">
                                         <div className="flex justify-between items-start">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-2xl">{category?.emoji || '💰'}</span>
+                                                    {category?.icon && <category.icon className="w-5 h-5 text-white" />}
                                                     <span className="font-semibold text-white">{expense.description}</span>
                                                 </div>
-                                                <p className="text-sm text-white/60">{category?.name || 'Sin categoría'}</p>
+                                                <p className="text-sm text-white/60">{category?.label || 'Sin categoría'}</p>
                                                 <p className="text-xs text-white/50 mt-1">
                                                     📅 {new Date(expense.date).toLocaleDateString('es', { year: 'numeric', month: 'long', day: 'numeric' })}
                                                 </p>
@@ -311,8 +378,8 @@ const TransactionsTab = ({
                     {viewMode === 'expenses' && (!expensesToShow || expensesToShow.length === 0) && (
                         <div className="text-center text-white/60 py-8">No hay gastos para mostrar</div>
                     )}
-                    {viewMode === 'savings' && (!savingsToShow || savingsToShow.length === 0) && (
-                        <div className="text-center text-white/60 py-8">No hay ahorros externos para mostrar</div>
+                    {viewMode === 'savings' && (!savingsToShow || savingsToShow.length === 0) && (!unifiedSavingsToShow || unifiedSavingsToShow.length === 0) && (
+                        <div className="text-center text-white/60 py-8">No hay ahorros para mostrar</div>
                     )}
                     {viewMode === 'investments' && (!investmentsToShow || investmentsToShow.length === 0) && (
                         <div className="text-center text-white/60 py-8">No hay inversiones para mostrar</div>

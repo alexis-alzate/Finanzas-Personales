@@ -4,7 +4,6 @@ import BottomSheet from '../components/BottomSheet';
 import OverviewTab from '../components/OverviewTab';
 
 function ExpensesPage({
-    // Props para agregar gasto
     description,
     setDescription,
     amount,
@@ -15,8 +14,6 @@ function ExpensesPage({
     setDate,
     categories,
     addExpense,
-
-    // Props para vista general
     categoryData,
     formatCurrency,
     recommendations,
@@ -31,13 +28,12 @@ function ExpensesPage({
     months,
     selectedMonth,
     selectedYear,
-
-    // Props para transacciones
     filteredExpenses,
     deleteExpense
 }) {
-    const [showMenu, setShowMenu] = useState(true); // Mostrar menú por defecto
-    const [activeView, setActiveView] = useState(null); // 'add', 'list', 'budgets', 'stats'
+    const [showMenu, setShowMenu] = useState(true);
+    const [activeView, setActiveView] = useState(null); // 'add', 'content'
+    const [activeTab, setActiveTab] = useState('list'); // 'list', 'budgets', 'stats'
 
     const menuOptions = [
         {
@@ -48,25 +44,11 @@ function ExpensesPage({
             description: 'Registra un nuevo gasto'
         },
         {
-            id: 'list',
+            id: 'content',
             icon: Eye,
-            label: 'Ver Gastos',
+            label: 'Ver Contenido',
             color: 'from-blue-500 to-indigo-600',
-            description: 'Lista de todos tus gastos'
-        },
-        {
-            id: 'budgets',
-            icon: PieChart,
-            label: 'Presupuestos',
-            color: 'from-purple-500 to-pink-600',
-            description: 'Estado de presupuestos por categoría'
-        },
-        {
-            id: 'stats',
-            icon: TrendingUp,
-            label: 'Estadísticas',
-            color: 'from-orange-500 to-red-600',
-            description: 'Gráficos y análisis'
+            description: 'Lista, Presupuestos y Estadísticas'
         }
     ];
 
@@ -87,7 +69,7 @@ function ExpensesPage({
                 <div className="space-y-4 mt-6">
                     <h1 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
                         <Wallet className="w-8 h-8" />
-                        Gestión de Gastos
+                        Gastos
                     </h1>
 
                     <div className="grid grid-cols-1 gap-4">
@@ -115,7 +97,7 @@ function ExpensesPage({
                 </div>
             )}
 
-            {/* Vista: Agregar Gasto */}
+            {/* Vista: Agregar Gasto (BottomSheet) */}
             <BottomSheet
                 isOpen={activeView === 'add'}
                 onClose={handleBack}
@@ -170,102 +152,144 @@ function ExpensesPage({
                 </div>
             </BottomSheet>
 
-            {/* Vista: Lista de Gastos */}
-            <BottomSheet
-                isOpen={activeView === 'list'}
-                onClose={handleBack}
-                title="Mis Gastos"
-                icon={Eye}
-            >
-                <div className="space-y-3">
-                    {filteredExpenses.length === 0 ? (
-                        <p className="text-white/60 text-center py-8">No hay gastos registrados este mes</p>
-                    ) : (
-                        filteredExpenses.map((expense) => {
-                            const cat = categories.find(c => c.value === expense.category);
-                            return (
-                                <div
-                                    key={expense.id}
-                                    className="bg-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/20 transition-all"
-                                >
-                                    <div className="flex-1">
-                                        <p className="text-white font-semibold">{expense.description}</p>
-                                        <p className="text-white/60 text-sm">{cat?.label || expense.category}</p>
-                                        <p className="text-white/40 text-xs">{new Date(expense.date).toLocaleDateString('es')}</p>
+            {/* Vista: Contenido (con tabs) */}
+            {activeView === 'content' && (
+                <div className="mt-6">
+                    <button
+                        onClick={handleBack}
+                        className="mb-4 text-white/80 hover:text-white flex items-center gap-2"
+                    >
+                        ← Volver
+                    </button>
+
+                    {/* Tabs */}
+                    <div className="flex gap-2 mb-6 bg-white/10 backdrop-blur-md rounded-2xl p-2">
+                        <button
+                            onClick={() => setActiveTab('list')}
+                            className={`flex-1 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'list'
+                                    ? 'bg-blue-500 text-white shadow-lg'
+                                    : 'text-white/70 hover:bg-white/10'
+                                }`}
+                        >
+                            <Eye className="w-5 h-5" />
+                            Ver Lista
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('budgets')}
+                            className={`flex-1 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'budgets'
+                                    ? 'bg-purple-500 text-white shadow-lg'
+                                    : 'text-white/70 hover:bg-white/10'
+                                }`}
+                        >
+                            <PieChart className="w-5 h-5" />
+                            Presupuestos
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('stats')}
+                            className={`flex-1 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === 'stats'
+                                    ? 'bg-orange-500 text-white shadow-lg'
+                                    : 'text-white/70 hover:bg-white/10'
+                                }`}
+                        >
+                            <TrendingUp className="w-5 h-5" />
+                            Estadísticas
+                        </button>
+                    </div>
+
+                    {/* Contenido de tabs */}
+                    {activeTab === 'list' && (
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
+                            <h3 className="text-xl font-bold text-white mb-4">Gastos Recientes</h3>
+                            <div className="space-y-3">
+                                {filteredExpenses.length === 0 ? (
+                                    <p className="text-white/60 text-center py-8">No hay gastos registrados este mes</p>
+                                ) : (
+                                    filteredExpenses
+                                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                        .map((expense) => {
+                                            const cat = categories.find(c => c.value === expense.category);
+                                            return (
+                                                <div
+                                                    key={expense.id}
+                                                    className="bg-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/20 transition-all"
+                                                >
+                                                    <div className="flex-1">
+                                                        <p className="text-white font-semibold">{expense.description}</p>
+                                                        <p className="text-white/60 text-sm">{cat?.label || expense.category}</p>
+                                                        <p className="text-white/40 text-xs">{new Date(expense.date).toLocaleDateString('es')}</p>
+                                                    </div>
+                                                    <div className="text-right flex items-center gap-3">
+                                                        <p className="text-white font-bold">{formatCurrency(expense.amount)}</p>
+                                                        <button
+                                                            onClick={() => deleteExpense(expense.id)}
+                                                            className="text-red-400 hover:text-red-300"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'budgets' && (
+                        <div className="space-y-4">
+                            {categoryData.map((cat) => (
+                                <div key={cat.value} className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            {cat.icon && <cat.icon className="w-6 h-6 text-white" />}
+                                            <span className="text-white font-semibold text-lg">{cat.label}</span>
+                                        </div>
+                                        <span className="text-white text-xl font-bold">{formatCurrency(cat.spent)}</span>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-white font-bold">{formatCurrency(expense.amount)}</p>
-                                        <button
-                                            onClick={() => deleteExpense(expense.id)}
-                                            className="text-red-400 text-sm hover:text-red-300 mt-1"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
+                                    {cat.limit && (
+                                        <>
+                                            <div className="w-full bg-white/20 rounded-full h-3 mb-2">
+                                                <div
+                                                    className={`h-3 rounded-full transition-all ${cat.isOverLimit ? 'bg-red-500' : cat.isNearLimit ? 'bg-yellow-500' : 'bg-green-500'
+                                                        }`}
+                                                    style={{ width: `${Math.min(cat.percentage, 100)}%` }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-white/70 text-sm">
+                                                    {cat.percentage.toFixed(0)}% usado
+                                                </p>
+                                                <p className="text-white/60 text-sm">
+                                                    {cat.limitType === 'quincenal' ? `Quincena ${cat.quincenaActual}` : 'Mensual'}: {formatCurrency(cat.limit)}
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
-                            );
-                        })
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'stats' && (
+                        <OverviewTab
+                            categoryData={categoryData}
+                            formatCurrency={formatCurrency}
+                            recommendations={recommendations}
+                            pieData={pieData}
+                            spentPercentage={spentPercentage}
+                            remaining={remaining}
+                            remainingPercentage={remainingPercentage}
+                            savingsPercentage={savingsPercentage}
+                            totalSavings={totalSavings}
+                            savingsGoal={savingsGoal}
+                            dailyExpenses={dailyExpenses}
+                            months={months}
+                            selectedMonth={selectedMonth}
+                            selectedYear={selectedYear}
+                        />
                     )}
                 </div>
-            </BottomSheet>
-
-            {/* Vista: Presupuestos */}
-            <BottomSheet
-                isOpen={activeView === 'budgets'}
-                onClose={handleBack}
-                title="Presupuestos"
-                icon={PieChart}
-            >
-                <div className="space-y-4">
-                    {categoryData.map((cat) => (
-                        <div key={cat.value} className="bg-white/10 p-4 rounded-xl">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-white font-semibold">{cat.label}</span>
-                                <span className="text-white">{formatCurrency(cat.spent)}</span>
-                            </div>
-                            {cat.limit && (
-                                <>
-                                    <div className="w-full bg-white/20 rounded-full h-2 mb-1">
-                                        <div
-                                            className={`h-2 rounded-full transition-all ${cat.isOverLimit ? 'bg-red-500' : 'bg-green-500'
-                                                }`}
-                                            style={{ width: `${Math.min(cat.percentage, 100)}%` }}
-                                        />
-                                    </div>
-                                    <p className="text-white/60 text-xs">
-                                        {cat.percentage.toFixed(0)}% usado • Límite: {formatCurrency(cat.limit)}
-                                    </p>
-                                </>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </BottomSheet>
-
-            {/* Vista: Estadísticas */}
-            <BottomSheet
-                isOpen={activeView === 'stats'}
-                onClose={handleBack}
-                title="Estadísticas"
-                icon={TrendingUp}
-            >
-                <OverviewTab
-                    categoryData={categoryData}
-                    formatCurrency={formatCurrency}
-                    recommendations={recommendations}
-                    pieData={pieData}
-                    spentPercentage={spentPercentage}
-                    remaining={remaining}
-                    remainingPercentage={remainingPercentage}
-                    savingsPercentage={savingsPercentage}
-                    totalSavings={totalSavings}
-                    savingsGoal={savingsGoal}
-                    dailyExpenses={dailyExpenses}
-                    months={months}
-                    selectedMonth={selectedMonth}
-                    selectedYear={selectedYear}
-                />
-            </BottomSheet>
+            )}
         </div>
     );
 }

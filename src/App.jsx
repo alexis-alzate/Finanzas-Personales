@@ -1,26 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { Heart, Shield, Target, TrendingDown, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { auth, db } from './firebase/config';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
-import { collection, addDoc, deleteDoc, doc, query, where, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
-import { Heart, Shield, Target, TrendingUp, TrendingDown } from 'lucide-react';
 
 // Importar componentes
-import LoginForm from './components/LoginForm';
 import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
+import LoginForm from './components/LoginForm';
 import Modals from './components/Modals';
+import Navbar from './components/Navbar';
+import SavingModal from './components/SavingModal';
+import Sidebar from './components/Sidebar';
 
 // Importar páginas
-import HomePage from './pages/HomePage';
-import ExpensesPage from './pages/ExpensesPage';
-import SavingsPage from './pages/SavingsPage';
+import ExpensesPage from "./pages/ExpensesPage";
 import DebtsPage from './pages/DebtsPage';
+import FinancesPage from './pages/FinancesPage';
+import HomePage from './pages/HomePage';
+import IncomesPage from './pages/IncomesPage';
 import ReportsPage from './pages/ReportsPage';
+import SavingsPage from './pages/SavingsPage';
 
 // Importar componentes auxiliares para ExpensesPage
-import OverviewTab from './components/OverviewTab';
 
 function App() {
   // =========================================
@@ -40,6 +42,16 @@ function App() {
   const [savingDescription, setSavingDescription] = useState('');
   const [savingAmount, setSavingAmount] = useState('');
   const [savingDate, setSavingDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // =========================================
+  // ESTADOS DE AHORROS UNIFICADOS (NUEVO)
+  // =========================================
+  const [savings, setSavings] = useState([]);
+  const [showSavingModal, setShowSavingModal] = useState(false);
+  const [newSavingDescription, setNewSavingDescription] = useState('');
+  const [newSavingAmount, setNewSavingAmount] = useState('');
+  const [newSavingType, setNewSavingType] = useState('interno');
+  const [newSavingDate, setNewSavingDate] = useState(new Date().toISOString().split('T')[0]);
 
   // =========================================
   // ESTADOS DE INVERSIONES
@@ -69,7 +81,7 @@ function App() {
   const [salaryPeriod, setSalaryPeriod] = useState('quincena-1');
 
   // =========================================
-  // ESTADOS DE DEUDAS (NUEVO)
+  // ESTADOS DE DEUDAS
   // =========================================
   const [debts, setDebts] = useState([]);
   const [debtPayments, setDebtPayments] = useState([]);
@@ -112,8 +124,6 @@ function App() {
   const categories = [
     { value: 'gastos-gustos', label: '🍿 Gastos Gustos', color: '#FF6384', limit: 290000, limitType: 'quincenal', icon: Heart, description: 'Caprichos y antojos ($290k por quincena)' },
     { value: 'gastos-obligatorios', label: '🏠 Gastos Obligatorios', color: '#FF9F40', limit: null, mandatory: true, icon: Shield, description: 'Arriendo, servicios, comida básica' },
-    { value: 'ahorros', label: '💰 Ahorros', color: '#36A2EB', limit: 190000, limitType: 'quincenal', icon: Target, description: 'Ahorro programado ($190k por quincena)' },
-    { value: 'emergencia', label: '🚨 Ahorro Emergencia', color: '#FFCE56', limit: null, mandatory: true, icon: Shield, description: 'Fondo de emergencia obligatorio' },
     { value: 'diezmos', label: '⛪ Diezmos', color: '#4BC0C0', limit: null, mandatory: true, icon: Heart, description: 'Contribución obligatoria' },
     { value: 'transporte', label: '🚗 Transporte', color: '#9966FF', limit: 100000, limitType: 'quincenal', icon: TrendingUp, description: 'Transporte y movilidad ($100k por quincena)' },
     { value: 'entretenimiento', label: '🎮 Entretenimiento', color: '#FF9F40', limit: 50000, limitType: 'quincenal', icon: TrendingDown, description: 'Ocio y diversión ($50k por quincena)' },
@@ -144,6 +154,7 @@ function App() {
         subscribeToSalaryIncomes(user.uid);
         subscribeToDebts(user.uid);
         subscribeToDebtPayments(user.uid);
+        subscribeToSavings(user.uid);
       }
     });
     return () => unsubscribe();
@@ -234,7 +245,6 @@ function App() {
     return unsubscribe;
   };
 
-  // NUEVO: Suscripciones para deudas
   const subscribeToDebts = (userId) => {
     const q = query(collection(db, 'debts'), where('userId', '==', userId));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -255,6 +265,18 @@ function App() {
         paymentsData.push({ id: doc.id, ...doc.data() });
       });
       setDebtPayments(paymentsData);
+    });
+    return unsubscribe;
+  };
+
+  const subscribeToSavings = (userId) => {
+    const q = query(collection(db, 'savings'), where('userId', '==', userId));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const savingsData = [];
+      snapshot.forEach((doc) => {
+        savingsData.push({ id: doc.id, ...doc.data() });
+      });
+      setSavings(savingsData);
     });
     return unsubscribe;
   };
@@ -524,20 +546,10 @@ function App() {
   // FUNCIONES DE SALARIOS QUINCENALES
   // =========================================
   const addSalaryIncome = async () => {
-    console.log('🔍 INICIO - Datos del formulario:', {
-      salaryAmount,
-      salaryPeriod,
-      salaryDate,
-      currentUser: currentUser?.uid
-    });
-
     if (!salaryAmount || !currentUser) {
-      console.log('❌ FALLÓ validación inicial');
       alert('Por favor completa todos los campos');
       return;
     }
-
-    console.log('✅ Validación inicial OK');
 
     try {
       const periodLabel = salaryPeriod === 'quincena-1' ? 'Quincena 1' : 'Quincena 2';
@@ -552,23 +564,16 @@ function App() {
         type: 'salary'
       };
 
-      console.log('📤 ENVIANDO a Firebase:', incomeData);
-
       await addDoc(collection(db, 'salaryIncomes'), incomeData);
-
-      console.log('✅ GUARDADO EXITOSO en Firebase');
 
       setSalaryAmount('975000');
       setSalaryDate(new Date().toISOString().split('T')[0]);
       setSalaryPeriod('quincena-1');
       setShowSalaryModal(false);
 
-      console.log('✅ Modal cerrado y campos reseteados');
       alert('💰 Salario quincenal registrado exitosamente');
     } catch (error) {
-      console.error('❌ ERROR COMPLETO:', error);
-      console.error('❌ Código:', error.code);
-      console.error('❌ Mensaje:', error.message);
+      console.error('Error al agregar salario:', error);
       alert('Error al agregar salario: ' + error.message);
     }
   };
@@ -584,7 +589,7 @@ function App() {
   };
 
   // =========================================
-  // FUNCIONES DE DEUDAS (NUEVO)
+  // FUNCIONES DE DEUDAS
   // =========================================
   const addDebt = async (debtData) => {
     if (!currentUser) return;
@@ -605,7 +610,6 @@ function App() {
     if (window.confirm('¿Estás seguro de eliminar esta deuda? También se eliminarán todos los pagos asociados.')) {
       try {
         await deleteDoc(doc(db, 'debts', id));
-        // Eliminar pagos asociados
         const paymentsToDelete = debtPayments.filter(p => p.debtId === id);
         for (const payment of paymentsToDelete) {
           await deleteDoc(doc(db, 'debtPayments', payment.id));
@@ -642,11 +646,68 @@ function App() {
   };
 
   // =========================================
-  // FUNCIONES DE FILTRADO (CON FIX DE ZONA HORARIA)
+  // FUNCIONES DE AHORROS UNIFICADOS
+  // =========================================
+  const addSaving = async () => {
+    if (!newSavingDescription || !newSavingAmount || !currentUser) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    const amount = parseFloat(newSavingAmount);
+
+    if (newSavingType === 'interno' || newSavingType === 'emergencia') {
+      if (amount > remaining) {
+        alert(`No tienes suficiente dinero disponible. Disponible: ${formatCurrency(remaining)}`);
+        return;
+      }
+    }
+
+    try {
+      const savingData = {
+        userId: currentUser.uid,
+        description: newSavingDescription.trim(),
+        amount: amount,
+        type: newSavingType,
+        date: newSavingDate,
+        timestamp: new Date().toISOString()
+      };
+
+      await addDoc(collection(db, 'savings'), savingData);
+
+      setNewSavingDescription('');
+      setNewSavingAmount('');
+      setNewSavingType('interno');
+      setNewSavingDate(new Date().toISOString().split('T')[0]);
+      setShowSavingModal(false);
+
+      const typeLabels = {
+        interno: '💰 Ahorro interno',
+        externo: '🏦 Ahorro externo',
+        emergencia: '🚨 Ahorro emergencia'
+      };
+      alert(`${typeLabels[newSavingType]} registrado exitosamente`);
+    } catch (error) {
+      console.error('Error al agregar ahorro:', error);
+      alert('Error al agregar ahorro: ' + error.message);
+    }
+  };
+
+  const deleteSaving = async (id) => {
+    if (window.confirm('¿Estás seguro de eliminar este ahorro?')) {
+      try {
+        await deleteDoc(doc(db, 'savings', id));
+      } catch (error) {
+        console.error('Error eliminando ahorro:', error);
+      }
+    }
+  };
+
+  // =========================================
+  // FUNCIONES DE FILTRADO
   // =========================================
   const getFilteredExpenses = () => {
     return expenses.filter(exp => {
-      // Extraer año, mes, día directamente del string YYYY-MM-DD
       const [year, month, day] = exp.date.split('-').map(Number);
       return month - 1 === selectedMonth && year === selectedYear;
     });
@@ -661,7 +722,8 @@ function App() {
 
   const getFilteredInvestments = () => {
     return investments.filter(investment => {
-      const [year, month, day] = investment.date.split('-').map(Number);
+      const [year, month, day] = investment.date.split('-').map(
+        Number);
       return month - 1 === selectedMonth && year === selectedYear;
     });
   };
@@ -680,37 +742,39 @@ function App() {
     });
   };
 
+  const getFilteredSavings = () => {
+    return savings.filter(saving => {
+      const [year, month, day] = saving.date.split('-').map(Number);
+      return month - 1 === selectedMonth && year === selectedYear;
+    });
+  };
+
   const getCategoryTotal = (categoryValue) => {
     return getFilteredExpenses().filter(exp => exp.category === categoryValue).reduce((sum, exp) => sum + exp.amount, 0);
   };
 
-  // NUEVO: Calcular gastos de una categoría en la quincena actual
-  // NUEVO: Calcular gastos de una categoría en la quincena actual REAL
   const getCategoryTotalCurrentQuincena = (categoryValue) => {
     const now = new Date();
     const currentDay = now.getDate();
-    const currentMonth = now.getMonth(); // Mes actual (0-11)
-    const currentYear = now.getFullYear(); // Año actual
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
     const isFirstQuincena = currentDay <= 15;
 
-    // Usar expenses directamente, NO getFilteredExpenses()
     return expenses.filter(exp => {
       if (exp.category !== categoryValue) return false;
 
       const [year, month, day] = exp.date.split('-').map(Number);
 
-      // Verificar que sea del mes Y año ACTUAL (no del seleccionado)
       if (month - 1 !== currentMonth || year !== currentYear) return false;
 
-      // Filtrar por quincena actual
       if (isFirstQuincena) {
-        return day <= 15; // Quincena 1: día 1-15
+        return day <= 15;
       } else {
-        return day > 15;  // Quincena 2: día 16-31
+        return day > 15;
       }
     }).reduce((sum, exp) => sum + exp.amount, 0);
   };
-  // Determinar quincena actual
+
   const getCurrentQuincena = () => {
     const now = new Date();
     return now.getDate() <= 15 ? 1 : 2;
@@ -740,6 +804,22 @@ function App() {
   const filteredExtraIncomes = getFilteredExtraIncomes();
   const filteredSalaryIncomes = getFilteredSalaryIncomes();
   const filteredExternalSavings = getFilteredExternalSavings();
+  const filteredSavings = getFilteredSavings();
+
+  // Calcular ahorros por tipo
+  const savingsInterno = filteredSavings
+    .filter(s => s.type === 'interno')
+    .reduce((sum, s) => sum + s.amount, 0);
+
+  const savingsExterno = filteredSavings
+    .filter(s => s.type === 'externo')
+    .reduce((sum, s) => sum + s.amount, 0);
+
+  const savingsEmergencia = filteredSavings
+    .filter(s => s.type === 'emergencia')
+    .reduce((sum, s) => sum + s.amount, 0);
+
+  const totalSavingsMonth = savingsInterno + savingsExterno + savingsEmergencia;
 
   const totalSalaryIncome = filteredSalaryIncomes.reduce((sum, income) => sum + income.amount, 0);
   const totalExtraIncome = filteredExtraIncomes.reduce((sum, income) => sum + income.amount, 0);
@@ -750,7 +830,11 @@ function App() {
   const totalInvestedFromExternalSavings = filteredInvestments.reduce((sum, inv) => sum + (inv.fromExternalSavings || 0), 0);
 
   const monthlyIncomeCalculated = totalSalaryIncome + totalExtraIncome;
-  const remaining = monthlyIncomeCalculated - totalSpent - totalInvestedFromDisponible;
+  const remaining = monthlyIncomeCalculated
+    - totalSpent
+    - totalInvestedFromDisponible
+    - savingsInterno
+    - savingsEmergencia;
   const remainingPercentage = monthlyIncomeCalculated > 0 ? (remaining / monthlyIncomeCalculated) * 100 : 0;
 
   // Patrimonio total
@@ -772,21 +856,25 @@ function App() {
 
   const totalInversionesHistoricas = investments.reduce((sum, inv) => sum + inv.amount, 0);
   const totalAhorrosExternosHistoricos = externalSavings.reduce((sum, saving) => sum + saving.amount, 0);
-  const patrimonioTotal = totalIngresoHistorico - totalGastosHistoricos - totalInversionesHistoricas + totalAhorrosExternosHistoricos;
 
+  // Sumar TODOS los ahorros históricos del nuevo sistema
+  const totalSavingsHistorico = savings.reduce((sum, saving) => sum + saving.amount, 0);
+
+  const patrimonioTotal = totalIngresoHistorico - totalGastosHistoricos - totalInversionesHistoricas + totalAhorrosExternosHistoricos + totalSavingsHistorico;
   const totalExternalSavings = filteredExternalSavings.reduce((sum, saving) => sum + saving.amount, 0);
   const emergenciaBase = getCategoryTotal('emergencia');
   const totalEmergenciaSavings = emergenciaBase + totalExternalSavings - totalInvestedFromEmergencia - totalInvestedFromExternalSavings;
-  const totalSavings = getCategoryTotal('ahorros') + totalEmergenciaSavings;
-
+  // ✅ NUEVA:
+  // Sumar TODOS los ahorros históricos (no solo del mes)
+  const totalSavingsHistoricoCompleto = savings.reduce((sum, saving) => sum + saving.amount, 0);
+  const totalSavings = totalSavingsHistoricoCompleto;
   const savingsPercentage = (totalSavings / savingsGoal) * 100;
   const spentPercentage = (totalSpent / monthlyIncomeCalculated) * 100;
 
   const categoryData = categories.map(cat => {
-    const spentMonth = getCategoryTotal(cat.value); // Total del mes
-    const spentQuincena = getCategoryTotalCurrentQuincena(cat.value); // Solo quincena actual
+    const spentMonth = getCategoryTotal(cat.value);
+    const spentQuincena = getCategoryTotalCurrentQuincena(cat.value);
 
-    // Si tiene límite quincenal, usar gasto de quincena actual
     const spent = cat.limitType === 'quincenal' ? spentQuincena : spentMonth;
     const limit = cat.limit || spent;
     const percentage = cat.limit ? (spent / cat.limit) * 100 : 0;
@@ -794,7 +882,7 @@ function App() {
     return {
       ...cat,
       spent,
-      spentMonth, // Guardar también el total del mes para referencia
+      spentMonth,
       spentQuincena,
       percentage: Math.min(percentage, 100),
       remaining: cat.limit ? cat.limit - spent : 0,
@@ -859,12 +947,10 @@ function App() {
   const last30Days = Array.from({ length: 30 }, (_, i) => {
     const day = i + 1;
     const year = selectedYear;
-    const month = selectedMonth + 1; // Sumar 1 porque selectedMonth es 0-based
+    const month = selectedMonth + 1;
 
-    // Crear string en formato YYYY-MM-DD
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    // Verificar que el día existe en ese mes
     const daysInMonth = new Date(year, selectedMonth + 1, 0).getDate();
     if (day > daysInMonth) return null;
 
@@ -956,8 +1042,75 @@ function App() {
                 setTempIncome={setTempIncome}
                 setTempGoal={setTempGoal}
                 setShowExtraIncomeModal={setShowExtraIncomeModal}
+                setShowSavingModal={setShowSavingModal} // ← AGREGAR ESTA LÍNEA
                 categoryData={categoryData}
                 expenses={expenses}
+              />
+            } />
+
+            <Route path="/finanzas" element={
+              <FinancesPage
+                description={description}
+                setDescription={setDescription}
+                amount={amount}
+                setAmount={setAmount}
+                category={category}
+                setCategory={setCategory}
+                date={date}
+                setDate={setDate}
+                categories={categories}
+                addExpense={addExpense}
+                filteredExpenses={filteredExpenses}
+                deleteExpense={deleteExpense}
+                categoryData={categoryData}
+                formatCurrency={formatCurrency}
+                savingDescription={savingDescription}
+                setSavingDescription={setSavingDescription}
+                savingAmount={savingAmount}
+                setSavingAmount={setSavingAmount}
+                savingDate={savingDate}
+                setSavingDate={setSavingDate}
+                addExternalSaving={addExternalSaving}
+                filteredExternalSavings={filteredExternalSavings}
+                deleteExternalSaving={deleteExternalSaving}
+                investmentDescription={investmentDescription}
+                setInvestmentDescription={setInvestmentDescription}
+                investmentAmount={investmentAmount}
+                setInvestmentAmount={setInvestmentAmount}
+                investmentSource={investmentSource}
+                setInvestmentSource={setInvestmentSource}
+                investmentDate={investmentDate}
+                setInvestmentDate={setInvestmentDate}
+                addInvestment={addInvestment}
+                filteredInvestments={filteredInvestments}
+                deleteInvestment={deleteInvestment}
+                remaining={remaining}
+                getCategoryTotal={getCategoryTotal}
+                totalExternalSavings={totalExternalSavings}
+                // ← AGREGAR ESTAS PROPS NUEVAS AL FINAL:
+                recommendations={recommendations}
+                pieData={pieData}
+                spentPercentage={spentPercentage}
+                remainingPercentage={remainingPercentage}
+                savingsPercentage={savingsPercentage}
+                totalSavings={totalSavings}
+                savingsGoal={savingsGoal}
+                dailyExpenses={dailyExpenses}
+                months={months}
+                selectedMonth={selectedMonth}
+                selectedYear={selectedYear}
+              />
+            } />
+
+            <Route path="/ingresos" element={
+              <IncomesPage
+                setShowSalaryModal={setShowSalaryModal}
+                setShowExtraIncomeModal={setShowExtraIncomeModal}
+                filteredSalaryIncomes={filteredSalaryIncomes}
+                filteredExtraIncomes={filteredExtraIncomes}
+                deleteSalaryIncome={deleteSalaryIncome}
+                deleteExtraIncome={deleteExtraIncome}
+                formatCurrency={formatCurrency}
               />
             } />
 
@@ -994,13 +1147,6 @@ function App() {
 
             <Route path="/ahorros" element={
               <SavingsPage
-                description={description}
-                setDescription={setDescription}
-                amount={amount}
-                setAmount={setAmount}
-                date={date}
-                setDate={setDate}
-                addExpense={addExpense}
                 savingDescription={savingDescription}
                 setSavingDescription={setSavingDescription}
                 savingAmount={savingAmount}
@@ -1025,9 +1171,9 @@ function App() {
                 getCategoryTotal={getCategoryTotal}
                 remaining={remaining}
                 totalExternalSavings={totalExternalSavings}
+                setShowSavingModal={setShowSavingModal} // ← AGREGAR ESTA LÍNEA
               />
             } />
-
             <Route path="/deudas" element={
               <DebtsPage
                 debts={debts}
@@ -1065,6 +1211,9 @@ function App() {
                 selectedYear={selectedYear}
                 totalExtraIncome={totalExtraIncome}
                 totalInvestedFromExternalSavings={totalInvestedFromExternalSavings}
+                filteredSavings={filteredSavings}
+                allSavings={savings}
+                deleteSaving={deleteSaving}
               />
             } />
           </Routes>
@@ -1108,6 +1257,22 @@ function App() {
             salaryPeriod={salaryPeriod}
             setSalaryPeriod={setSalaryPeriod}
             addSalaryIncome={addSalaryIncome}
+          />
+
+          <SavingModal
+            showSavingModal={showSavingModal}
+            setShowSavingModal={setShowSavingModal}
+            newSavingDescription={newSavingDescription}
+            setNewSavingDescription={setNewSavingDescription}
+            newSavingAmount={newSavingAmount}
+            setNewSavingAmount={setNewSavingAmount}
+            newSavingType={newSavingType}
+            setNewSavingType={setNewSavingType}
+            newSavingDate={newSavingDate}
+            setNewSavingDate={setNewSavingDate}
+            addSaving={addSaving}
+            formatCurrency={formatCurrency}
+            remaining={remaining}
           />
         </div>
       </div>
