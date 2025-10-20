@@ -1,6 +1,7 @@
-import { DollarSign, Menu } from 'lucide-react';
+import { DollarSign, Menu, Briefcase } from 'lucide-react'; // 1. Importamos 'Briefcase' (maletín)
 
-const Header = ({ currentUser, setShowSidebar }) => {
+// 2. Recibimos 'setShowSalaryModal' como prop
+const Header = ({ currentUser, setShowSidebar, setShowSalaryModal }) => {
     return (
         <div className="sticky top-0 z-30 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 -mx-4 px-4 py-4 mb-6 shadow-lg backdrop-blur-md">
             <div className="flex justify-between items-center gap-4">
@@ -24,8 +25,14 @@ const Header = ({ currentUser, setShowSidebar }) => {
                     </p>
                 </div>
 
-                {/* Espacio para balance visual */}
-                <div className="w-12 md:w-14 flex-shrink-0"></div>
+                {/* 3. Reemplazamos el div vacío por el botón de salario */}
+                <button
+                    onClick={() => setShowSalaryModal(true)}
+                    className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-xl transition-all shadow-lg flex-shrink-0"
+                    title="Registrar Salario Quincenal"
+                >
+                    <Briefcase className="w-6 h-6" />
+                </button>
             </div>
         </div>
     );

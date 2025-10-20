@@ -3,7 +3,6 @@ import { CreditCard, PlusCircle, DollarSign, Eye, Trash2 } from 'lucide-react';
 import BottomSheet from '../components/BottomSheet';
 
 function DebtsPage({
-    // Props para manejar deudas
     debts,
     debtPayments,
     addDebt,
@@ -11,7 +10,8 @@ function DebtsPage({
     addDebtPayment,
     deleteDebtPayment,
     formatCurrency,
-    remaining
+    remaining,
+    setRemaining // 👈 añadido para actualizar el dinero disponible
 }) {
     const [showMenu, setShowMenu] = useState(true);
     const [activeView, setActiveView] = useState(null);
@@ -29,27 +29,9 @@ function DebtsPage({
     const [paymentNote, setPaymentNote] = useState('');
 
     const menuOptions = [
-        {
-            id: 'add',
-            icon: PlusCircle,
-            label: 'Agregar Deuda',
-            color: 'from-red-500 to-pink-600',
-            description: 'Registra una nueva deuda'
-        },
-        {
-            id: 'pay',
-            icon: DollarSign,
-            label: 'Pagar Cuota',
-            color: 'from-green-500 to-emerald-600',
-            description: 'Registra un pago de deuda'
-        },
-        {
-            id: 'list',
-            icon: Eye,
-            label: 'Ver Deudas',
-            color: 'from-blue-500 to-indigo-600',
-            description: 'Lista de todas tus deudas'
-        }
+        { id: 'add', icon: PlusCircle, label: 'Agregar Deuda', color: 'from-red-500 to-pink-600', description: 'Registra una nueva deuda' },
+        { id: 'pay', icon: DollarSign, label: 'Pagar Cuota', color: 'from-green-500 to-emerald-600', description: 'Registra un pago de deuda' },
+        { id: 'list', icon: Eye, label: 'Ver Deudas', color: 'from-blue-500 to-indigo-600', description: 'Lista de todas tus deudas' }
     ];
 
     const handleOptionClick = (optionId) => {
@@ -77,6 +59,41 @@ function DebtsPage({
     const totalMonthlyPayments = debts
         .filter(d => d.status === 'active')
         .reduce((sum, d) => sum + d.monthlyPayment, 0);
+
+    // 💸 Manejar registro de pago
+    const handleRegisterPayment = () => {
+        if (paymentAmount && selectedDebt) {
+            const amount = parseFloat(paymentAmount);
+
+            // Registrar el pago
+            addDebtPayment({
+                debtId: selectedDebt.id,
+                amount,
+                date: paymentDate,
+                note: paymentNote
+            });
+
+            // 👇 Debitar del dinero disponible
+            if (typeof setRemaining === 'function') {
+                setRemaining(prev => Math.max(prev - amount, 0)); // evita saldo negativo
+            }
+
+            // Limpiar estados
+            setPaymentAmount('');
+            setPaymentNote('');
+            setSelectedDebt(null);
+            handleBack();
+        }
+    };
+
+    // 🗑️ Manejar eliminación de pago (devolver dinero)
+    const handleDeletePayment = (paymentId) => {
+        const payment = debtPayments.find(p => p.id === paymentId);
+        if (payment && typeof setRemaining === 'function') {
+            setRemaining(prev => prev + payment.amount);
+        }
+        deleteDebtPayment(paymentId);
+    };
 
     return (
         <div className="pb-32 px-4">
@@ -138,6 +155,7 @@ function DebtsPage({
                         </div>
                     )}
 
+                    {/* Opciones del menú */}
                     <div className="grid grid-cols-1 gap-4">
                         {menuOptions.map((option) => {
                             const Icon = option.icon;
@@ -163,43 +181,35 @@ function DebtsPage({
                 </div>
             )}
 
-            {/* Vista: Agregar Deuda */}
-            <BottomSheet
-                isOpen={activeView === 'add'}
-                onClose={handleBack}
-                title="Nueva Deuda"
-                icon={PlusCircle}
-            >
+            {/* BottomSheet: Agregar Deuda */}
+            <BottomSheet isOpen={activeView === 'add'} onClose={handleBack} title="Nueva Deuda" icon={PlusCircle}>
                 <div className="space-y-4">
                     <input
                         type="text"
                         placeholder="Nombre de la deuda (ej: Tarjeta Bancolombia)"
                         value={debtName}
                         onChange={(e) => setDebtName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:ring-2 focus:ring-white/50"
                     />
-
                     <input
                         type="number"
                         placeholder="Monto total de la deuda"
                         value={debtTotal}
                         onChange={(e) => setDebtTotal(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:ring-2 focus:ring-white/50"
                     />
-
                     <input
                         type="number"
                         placeholder="Cuota mensual"
                         value={debtMonthlyPayment}
                         onChange={(e) => setDebtMonthlyPayment(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:ring-2 focus:ring-white/50"
                     />
-
                     <input
                         type="date"
                         value={debtStartDate}
                         onChange={(e) => setDebtStartDate(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:ring-2 focus:ring-white/50"
                     />
 
                     <button
@@ -225,13 +235,8 @@ function DebtsPage({
                 </div>
             </BottomSheet>
 
-            {/* Vista: Pagar Cuota */}
-            <BottomSheet
-                isOpen={activeView === 'pay'}
-                onClose={handleBack}
-                title="Pagar Cuota"
-                icon={DollarSign}
-            >
+            {/* BottomSheet: Pagar Cuota */}
+            <BottomSheet isOpen={activeView === 'pay'} onClose={handleBack} title="Pagar Cuota" icon={DollarSign}>
                 <div className="space-y-4">
                     <div className="bg-white/10 p-4 rounded-xl mb-4">
                         <p className="text-white/80 text-sm mb-1">Disponible para pagar:</p>
@@ -267,39 +272,24 @@ function DebtsPage({
                                 placeholder="Monto a pagar"
                                 value={paymentAmount}
                                 onChange={(e) => setPaymentAmount(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:ring-2 focus:ring-white/50"
                             />
-
                             <input
                                 type="date"
                                 value={paymentDate}
                                 onChange={(e) => setPaymentDate(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white border border-white/30 focus:ring-2 focus:ring-white/50"
                             />
-
                             <input
                                 type="text"
                                 placeholder="Nota (opcional)"
                                 value={paymentNote}
                                 onChange={(e) => setPaymentNote(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:ring-2 focus:ring-white/50"
                             />
 
                             <button
-                                onClick={() => {
-                                    if (paymentAmount) {
-                                        addDebtPayment({
-                                            debtId: selectedDebt.id,
-                                            amount: parseFloat(paymentAmount),
-                                            date: paymentDate,
-                                            note: paymentNote
-                                        });
-                                        setPaymentAmount('');
-                                        setPaymentNote('');
-                                        setSelectedDebt(null);
-                                        handleBack();
-                                    }
-                                }}
+                                onClick={handleRegisterPayment}
                                 className="w-full bg-white text-green-600 py-4 rounded-xl font-bold text-lg hover:bg-white/90 transition-all shadow-lg"
                             >
                                 💸 Registrar Pago
@@ -316,13 +306,8 @@ function DebtsPage({
                 </div>
             </BottomSheet>
 
-            {/* Vista: Lista de Deudas */}
-            <BottomSheet
-                isOpen={activeView === 'list'}
-                onClose={handleBack}
-                title="Todas las Deudas"
-                icon={Eye}
-            >
+            {/* BottomSheet: Lista de Deudas */}
+            <BottomSheet isOpen={activeView === 'list'} onClose={handleBack} title="Todas las Deudas" icon={Eye}>
                 <div className="space-y-4">
                     {debts.length === 0 ? (
                         <p className="text-white/60 text-center py-8">No tienes deudas registradas</p>
@@ -361,22 +346,15 @@ function DebtsPage({
                                             <span className="text-white/80">Falta:</span>
                                             <span className="text-red-400 font-bold">{formatCurrency(remaining)}</span>
                                         </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-white/80">Cuota Mensual:</span>
-                                            <span className="text-white font-bold">{formatCurrency(debt.monthlyPayment)}</span>
-                                        </div>
                                     </div>
 
                                     <div className="w-full bg-white/20 rounded-full h-3 mb-2">
                                         <div
-                                            className={`h-3 rounded-full transition-all ${progress >= 100 ? 'bg-green-500' : 'bg-blue-500'
-                                                }`}
+                                            className={`h-3 rounded-full transition-all ${progress >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
                                             style={{ width: `${Math.min(progress, 100)}%` }}
                                         />
                                     </div>
-                                    <p className="text-white/60 text-xs text-center mb-3">
-                                        Progreso: {progress.toFixed(1)}%
-                                    </p>
+                                    <p className="text-white/60 text-xs text-center mb-3">Progreso: {progress.toFixed(1)}%</p>
 
                                     {payments.length > 0 && (
                                         <details className="mt-3">
@@ -392,7 +370,7 @@ function DebtsPage({
                                                             {payment.note && <p className="text-white/40 italic">{payment.note}</p>}
                                                         </div>
                                                         <button
-                                                            onClick={() => deleteDebtPayment(payment.id)}
+                                                            onClick={() => handleDeletePayment(payment.id)}
                                                             className="text-red-400 hover:text-red-300"
                                                         >
                                                             <Trash2 className="w-4 h-4" />

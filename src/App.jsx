@@ -805,6 +805,14 @@ function App() {
   const filteredSalaryIncomes = getFilteredSalaryIncomes();
   const filteredExternalSavings = getFilteredExternalSavings();
   const filteredSavings = getFilteredSavings();
+  // CÓDIGO PARA AÑADIR
+  const filteredDebtPayments = debtPayments.filter(p => {
+    const [year, month] = p.date.split('-').map(Number);
+    return month - 1 === selectedMonth && year === selectedYear;
+  });
+  const totalDebtPaymentsMonth = filteredDebtPayments.reduce((sum, payment) => sum + payment.monto, 0);
+
+
 
   // Calcular ahorros por tipo
   const savingsInterno = filteredSavings
@@ -835,6 +843,7 @@ function App() {
     - totalInvestedFromDisponible
     - savingsInterno
     - savingsEmergencia;
+  - totalDebtPaymentsMonth; // <-- AÑADE ESTA LÍNEA
   const remainingPercentage = monthlyIncomeCalculated > 0 ? (remaining / monthlyIncomeCalculated) * 100 : 0;
 
   // Patrimonio total
@@ -1011,9 +1020,12 @@ function App() {
             savingsGoal={savingsGoal}
           />
 
+          // En el return de tu App.js
+
           <Header
             currentUser={currentUser}
             setShowSidebar={setShowSidebar}
+            setShowSalaryModal={setShowSalaryModal} // <--- AGREGA ESTA LÍNEA
           />
 
           <Routes>
