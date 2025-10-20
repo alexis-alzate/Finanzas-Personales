@@ -1020,7 +1020,7 @@ function App() {
             savingsGoal={savingsGoal}
           />
 
-          // En el return de tu App.js
+          
 
           <Header
             currentUser={currentUser}
