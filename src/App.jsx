@@ -3,7 +3,7 @@ import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, query, setDoc, 
 import { Heart, Shield, Target, TrendingDown, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
-import { auth, db } from './firebase/config';
+import { auth, db } from './services/firebase';
 
 // Importar componentes
 import Header from './components/Header';
@@ -1020,7 +1020,7 @@ function App() {
             savingsGoal={savingsGoal}
           />
 
-          
+
 
           <Header
             currentUser={currentUser}
